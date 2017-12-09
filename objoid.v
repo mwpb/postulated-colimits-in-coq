@@ -11,6 +11,8 @@ eq_trans (x y z:carrier) (H1:eq x y) (H2:eq y z): eq x z
 }.
 
 Arguments eq {o}.
+Arguments eq_refl {o} {x}.
+Arguments eq_sym {o} {x} {y}.
 Arguments eq_trans {o} {x} {y} {z}.
 
 Infix "~" := eq (at level 80, right associativity).
@@ -36,7 +38,6 @@ Qed.
 
 Definition carrier_comp (a b c:objoid) (F:mapoid a b) (G:mapoid b c) (a1:carrier a): carrier c :=
     a1 |> F |> G.
-Compute carrier_comp.
 Arguments carrier_comp {a} {b} {c}.
 
 Definition mapoid_comp (a b c:objoid) (F:mapoid a b) (G:mapoid b c) := {|
@@ -59,25 +60,45 @@ Qed.
 
 Arguments mapoid_ext {a} {b} {c}.
 
+End objoid.
+
+Arguments eq {o}.
+Arguments eq_refl {o} {x}.
+Arguments eq_sym {o} {x} {y}.
+Arguments eq_trans {o} {x} {y} {z}.
+
+
+Arguments map {a} {b}.
+Arguments pres {a} {b}.
+
+Arguments mapoid_comp {a} {b} {c}.
+Arguments mapoid_ext {a} {b} {c}.
+
+Infix "~" := eq (at level 80, right associativity).
+Infix "|>" := apply (at level 71, left associativity).
+Infix "||>" := mapoid_comp (at level 70, right associativity).
+
+Section pushout.
+
 Variables A B C Z:objoid.
 Variable f:mapoid A B.
 Variable g:mapoid A C.
 
-Inductive DCarrier:Type :=
-| c: carrier C -> DCarrier
-| b: carrier B -> DCarrier.
+Inductive PushoutCarrier:Type :=
+| c: carrier C -> PushoutCarrier
+| b: carrier B -> PushoutCarrier.
 
-Inductive DEq:DCarrier -> DCarrier -> Prop :=
-| beq (b1 b2:carrier B) (H:b1~b2):  DEq (b b1) (b b2)
-| ceq (c1 c2:carrier C) (H:c1~c2): DEq (c c1) (c c2)
-| aeq (a:carrier A): DEq (b (a|>f)) (c (a|>g))
-| refl: forall d1:DCarrier, DEq d1 d1
-| sym (d1 d2:DCarrier) (H:DEq d1 d2): DEq d2 d1
-| trans (d1 d2 d3:DCarrier) (H1:DEq d1 d2) (H2:DEq d2 d3): DEq d1 d3.
+Inductive PushoutEq:PushoutCarrier -> PushoutCarrier -> Prop :=
+| beq (b1 b2:carrier B) (H:b1~b2):  PushoutEq (b b1) (b b2)
+| ceq (c1 c2:carrier C) (H:c1~c2): PushoutEq (c c1) (c c2)
+| aeq (a:carrier A): PushoutEq (b (a|>f)) (c (a|>g))
+| refl: forall d1:PushoutCarrier, PushoutEq d1 d1
+| sym (d1 d2:PushoutCarrier) (H:PushoutEq d1 d2): PushoutEq d2 d1
+| trans (d1 d2 d3:PushoutCarrier) (H1:PushoutEq d1 d2) (H2:PushoutEq d2 d3): PushoutEq d1 d3.
 
-Definition D:objoid := {|
-carrier:=DCarrier;
-eq:=DEq;
+Definition Pushout:objoid := {|
+carrier:=PushoutCarrier;
+eq:=PushoutEq;
 eq_refl:= refl;
 eq_sym:=sym;
 eq_trans:=trans
@@ -88,13 +109,13 @@ Variable k:mapoid C Z.
 
 Variable H2:(f||>h) = (g||>k).
 
-Definition carrier_out (d1:carrier D): carrier Z :=
+Definition carrier_out (d1:carrier Pushout): carrier Z :=
 match d1 with
 | b b1 => (b1 |> h)
 | c c1 => (c1 |> k)
 end.
 
-Lemma pres_out (d1 d2:carrier D) (H1:d1~d2): carrier_out d1 ~carrier_out d2.
+Lemma pres_out (d1 d2:carrier Pushout) (H1:d1~d2): carrier_out d1 ~carrier_out d2.
 Proof.
 elim H1.
 intro.
@@ -139,5 +160,15 @@ pres:=pres_out
 |}.
 
 Compute mapoid_out.
-End objoid.
+End pushout.
 
+Arguments Pushout {A} {B} {C}.
+
+
+Section Test.
+
+Variables A B C:objoid.
+Variable f:mapoid A B.
+Variable g:mapoid A C.
+
+Definition D:objoid := Pushout f g.
