@@ -104,6 +104,33 @@ eq_sym:=sym;
 eq_trans:=trans
 |}.
 
+Definition new_b: carrier B -> carrier Pushout := b.
+Definition new_c: carrier C -> carrier Pushout := c.
+
+Lemma pres_ib (b1 b2:carrier B) (H:b1~b2): new_b b1 ~ new_b b2.
+Proof.
+simpl.
+apply beq.
+assumption.
+Qed.
+
+Lemma pres_ic (c1 c2:carrier C) (H:c1~c2): new_c c1 ~ new_c c2.
+Proof.
+simpl.
+apply ceq.
+assumption.
+Qed.
+
+Definition ib: mapoid B Pushout := {|
+map:=new_b;
+pres:=pres_ib
+|}.
+
+Definition ic: mapoid C Pushout := {|
+map:=new_c;
+pres:=pres_ic
+|}.
+
 Variable h:mapoid B Z.
 Variable k:mapoid C Z.
 
@@ -159,11 +186,55 @@ map:=carrier_out;
 pres:=pres_out
 |}.
 
-Compute mapoid_out.
+Lemma b_triangle (b1:carrier B): (new_b b1 |> mapoid_out) = (b1 |> h).
+Proof.
+simpl.
+trivial.
+Qed.
+
+Lemma ib_triangle: (ib ||> mapoid_out) = h.
+Proof.
+elim ib.
+intros.
+elim mapoid_out.
+intros.
+elim h.
+intros.
+apply b_triangle.
+    
+
+Lemma factorisation_unique (H:(f||>h)=(g||>k)):
+exists! z:mapoid Pushout Z,
+( h = (ib ||> z)) /\ (k = (ic ||> z)).
+Proof.
+exists mapoid_out.
+split.
+split.
+(* elim ib. *)
+(* intros. *)
+(* elim mapoid_out. *)
+(* intros. *)
+
+
+Structure PO := {
+pushout:objoid;
+i1:mapoid B pushout;
+i2:mapoid C pushout;
+factorisation (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H:(f||>h)=(g||>k)):
+    exists! z:mapoid pushout Z,
+    ( h = (i1 ||> z)) /\ (k = (i2 ||> z))
+}.
+
+Definition Pushout1 := {|
+pushout:=Pushout;
+i1:=ib;
+i2:=ic;
+factorisation:=mapoid_out
+|}.
+
 End pushout.
 
 Arguments Pushout {A} {B} {C}.
-
 
 Section Test.
 
