@@ -25,7 +25,9 @@ pres (a1 a2:carrier a) (H:a1~a2): map a1~map a2
 Arguments map {a} {b}.
 Arguments pres {a} {b}.
 
-Definition apply {a b:objoid} (a1:carrier a) (f:mapoid a b) := map f a1.
+Definition apply (a b:objoid) (a1:carrier a) (f:mapoid a b) := map f a1.
+
+Arguments apply {a} {b}.
 
 Infix "|>" := apply (at level 71, left associativity).
 
@@ -49,7 +51,7 @@ Arguments mapoid_comp {a} {b} {c}.
 
 Infix "||>" := mapoid_comp (at level 70, right associativity).
 
-Definition mapoid_ext (a b c:objoid) (F:mapoid a b) (G:mapoid b c) (a1: carrier a) :
+Lemma mapoid_comp_assoc (a b c:objoid) (F:mapoid a b) (G:mapoid b c) (a1: carrier a) :
     (a1 |> F |> G) ~ (a1 |> (F ||> G)).
 Proof.
 simpl.
@@ -58,7 +60,17 @@ apply pres.
 apply eq_refl.
 Qed.
 
-Arguments mapoid_ext {a} {b} {c}.
+Definition Ext (a b:objoid) (f g:mapoid a b) := forall (a1: carrier a), a1 |> f ~ a1 |> g.
+Arguments Ext {a} {b}.
+
+Infix "|%" := Ext (at level 90, right associativity).
+
+
+Lemma extensionality (a b:objoid) (f g:mapoid a b) (H:forall (a1:carrier a), a1 |> f ~ a1 |> g):
+    Ext f g.
+Proof.
+    auto.
+Qed.
 
 End objoid.
 
@@ -70,14 +82,155 @@ Arguments eq_trans {o} {x} {y} {z}.
 
 Arguments map {a} {b}.
 Arguments pres {a} {b}.
+Arguments apply {a} {b}.
+
 
 Arguments mapoid_comp {a} {b} {c}.
-Arguments mapoid_ext {a} {b} {c}.
+Arguments mapoid_comp_assoc {a} {b} {c}.
+Arguments Ext {a} {b}.
 
 Infix "~" := eq (at level 80, right associativity).
 Infix "|>" := apply (at level 71, left associativity).
 Infix "||>" := mapoid_comp (at level 70, right associativity).
+Infix "|%" := Ext (at level 90, right associativity).
 
+
+Section po.
+
+Structure PushOut (A B C:objoid) (f:mapoid A B) (g:mapoid A C):Type := {
+    object:objoid;
+    i0:mapoid B object;
+    i1:mapoid C object;
+    univ (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) = (g||>k)): exists! z:mapoid object Z, ((i0 ||> z) = h) /\ ((i1 ||> z) = k)
+}.
+
+(* We define the pushout object. *)
+
+Inductive DisjointUnion (B C:objoid):Type :=
+| c: carrier C -> DisjointUnion B C
+| b: carrier B -> DisjointUnion B C.
+
+Arguments b {B} {C}.
+Arguments c {B} {C}.
+
+Inductive PushoutEq (A B C:objoid) (f:mapoid A B) (g:mapoid A C): DisjointUnion B C -> DisjointUnion B C -> Prop :=
+| beq (b1 b2:carrier B) (H:b1~b2):  PushoutEq A B C f g (b b1) (b b2)
+| ceq (c1 c2:carrier C) (H:c1~c2): PushoutEq A B C f g (c c1) (c c2)
+| aeq (a:carrier A): PushoutEq A B C f g (b (a|>f)) (c (a|>g))
+| refl: forall d1:DisjointUnion B C, PushoutEq A B C f g d1 d1
+| sym (d1 d2:DisjointUnion B C) (H:PushoutEq A B C f g d1 d2): PushoutEq A B C f g d2 d1
+| trans (d1 d2 d3:DisjointUnion B C) (H1:PushoutEq A B C f g d1 d2) (H2:PushoutEq A B C f g d2 d3): PushoutEq A B C f g d1 d3.
+
+Arguments refl {A} {B} {C} {f} {g}.
+Arguments sym {A} {B} {C} {f} {g}.
+Arguments trans {A} {B} {C} {f} {g}.
+
+Definition PushoutObject (A B C:objoid) (f:mapoid A B) (g:mapoid A C):objoid := {|
+carrier:= DisjointUnion B C;
+eq:= PushoutEq A B C f g;
+eq_refl:= refl;
+eq_sym:= sym;
+eq_trans:= trans;
+|}.
+
+(* We define the pushout inclusions. *)
+
+Definition ib (A B C:objoid) (f:mapoid A B) (g:mapoid A C): carrier B -> carrier (PushoutObject A B C f g) := b.
+
+Definition mapoid_b (A B C:objoid) (f:mapoid A B) (g:mapoid A C):mapoid B (PushoutObject A B C f g) := {|
+map:= ib A B C f g;
+pres:= beq A B C f g
+|}.
+
+Definition ic (A B C:objoid) (f:mapoid A B) (g:mapoid A C): carrier C -> carrier (PushoutObject A B C f g) := c.
+
+Definition mapoid_c (A B C:objoid) (f:mapoid A B) (g:mapoid A C):mapoid C (PushoutObject A B C f g) := {|
+map:= ic A B C f g;
+pres:= ceq A B C f g
+|}.
+
+(* We prove the universal property of the pushout. *)
+
+Definition factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) = (g||>k)) (d1:carrier (PushoutObject A B C f g)):
+    carrier Z :=
+    match d1 with
+    | b b1 => b1 |> h
+    | c c1 => c1 |> k
+    end.
+
+Lemma pres_factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) = (g||>k)) (d1 d2:(carrier (PushoutObject A B C f g))) (H2:d1~d2):
+    factorisation A B C f g Z h k H d1 ~ factorisation A B C f g Z h k H d2.
+Proof.
+    elim H2.
+    
+    intros.
+    simpl.
+    apply pres.
+    assumption.
+
+    intros.
+    simpl.
+    apply pres.
+    assumption.
+
+    intros.
+    simpl.
+    apply (eq_trans (mapoid_comp_assoc f h a)).
+    apply eq_sym.
+    apply (eq_trans (mapoid_comp_assoc g k a)).
+    apply eq_sym.
+    rewrite H.
+    apply eq_refl.
+
+    intros.
+    apply eq_refl.
+
+    intros.
+    apply (eq_sym H1).
+
+    intros.
+    apply (eq_trans H0 H4).
+Qed.
+    
+
+Definition mapoid_factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) = (g||>k)):
+    mapoid (PushoutObject A B C f g) Z := {|
+    map:=factorisation A B C f g Z h k H;
+    pres:=pres_factorisation A B C f g Z h k H
+    |}.
+
+Lemma mapoid_b_factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) = (g||>k)):
+    (mapoid_b A B C f g ||> mapoid_factorisation A B C f g Z h k H) |% h.
+Proof.
+    apply extensionality.
+    intro.
+    apply mapoid_comp_assoc.
+Qed.
+
+Lemma mapoid_c_factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) = (g||>k)):
+(mapoid_c A B C f g ||> mapoid_factorisation A B C f g Z h k H) |% k.
+Proof.
+apply extensionality.
+intro.
+apply mapoid_comp_assoc.
+Qed.
+
+Lemma existence_univ (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) = (g||>k)):
+    ((mapoid_b A B C f g ||> mapoid_factorisation A B C f g Z h k H) |% h) /\ ((mapoid_c A B C f g ||> mapoid_factorisation A B C f g Z h k H) |% k).
+Proof.
+    split.
+    apply mapoid_b_factorisation.
+    apply mapoid_c_factorisation.
+Qed.
+
+Lemma univ_pushout (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) = (g||>k)):
+    exists! z:mapoid (PushoutObject A B C f g) Z, ((mapoid_b A B C f g ||> z) = h) /\ ((mapoid_c A B C f g ||> z) = k).
+Proof.  
+    exists (mapoid_factorisation A B C f g Z h k H ).
+    unfold unique.
+    intros.
+    (* need to rephrase this in terms of |% so manually unfold the exists unique *)
+    
 Section pushout.
 
 Variables A B C Z:objoid.
