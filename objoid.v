@@ -101,7 +101,10 @@ Structure PushOut (A B C:objoid) (f:mapoid A B) (g:mapoid A C):Type := {
     object:objoid;
     i0:mapoid B object;
     i1:mapoid C object;
-    univ (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) = (g||>k)): exists! z:mapoid object Z, ((i0 ||> z) = h) /\ ((i1 ||> z) = k)
+    univ (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) = (g||>k)):
+        (exists z:mapoid object Z, ((i0 ||> z) = h) /\ ((i1 ||> z) = k))
+        /\
+        (forall y z:mapoid object Z,(((i0 ||> z) = h) /\ ((i1 ||> z) = k) /\ ((i0 ||> y) = h) /\ ((i1 ||> y) = k)) -> z|%y)
 }.
 
 (* We define the pushout object. *)
@@ -151,14 +154,14 @@ pres:= ceq A B C f g
 
 (* We prove the universal property of the pushout. *)
 
-Definition factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) = (g||>k)) (d1:carrier (PushoutObject A B C f g)):
+Definition factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) |% (g||>k)) (d1:carrier (PushoutObject A B C f g)):
     carrier Z :=
     match d1 with
     | b b1 => b1 |> h
     | c c1 => c1 |> k
     end.
 
-Lemma pres_factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) = (g||>k)) (d1 d2:(carrier (PushoutObject A B C f g))) (H2:d1~d2):
+Lemma pres_factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) |% (g||>k)) (d1 d2:(carrier (PushoutObject A B C f g))) (H2:d1~d2):
     factorisation A B C f g Z h k H d1 ~ factorisation A B C f g Z h k H d2.
 Proof.
     elim H2.
@@ -179,8 +182,7 @@ Proof.
     apply eq_sym.
     apply (eq_trans (mapoid_comp_assoc g k a)).
     apply eq_sym.
-    rewrite H.
-    apply eq_refl.
+    auto.
 
     intros.
     apply eq_refl.
@@ -193,13 +195,13 @@ Proof.
 Qed.
     
 
-Definition mapoid_factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) = (g||>k)):
+Definition mapoid_factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) |% (g||>k)):
     mapoid (PushoutObject A B C f g) Z := {|
     map:=factorisation A B C f g Z h k H;
     pres:=pres_factorisation A B C f g Z h k H
     |}.
 
-Lemma mapoid_b_factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) = (g||>k)):
+Lemma mapoid_b_factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) |% (g||>k)):
     (mapoid_b A B C f g ||> mapoid_factorisation A B C f g Z h k H) |% h.
 Proof.
     apply extensionality.
@@ -207,7 +209,7 @@ Proof.
     apply mapoid_comp_assoc.
 Qed.
 
-Lemma mapoid_c_factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) = (g||>k)):
+Lemma mapoid_c_factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) |% (g||>k)):
 (mapoid_c A B C f g ||> mapoid_factorisation A B C f g Z h k H) |% k.
 Proof.
 apply extensionality.
@@ -215,7 +217,7 @@ intro.
 apply mapoid_comp_assoc.
 Qed.
 
-Lemma existence_univ (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) = (g||>k)):
+Lemma existence_univ (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) |% (g||>k)):
     ((mapoid_b A B C f g ||> mapoid_factorisation A B C f g Z h k H) |% h) /\ ((mapoid_c A B C f g ||> mapoid_factorisation A B C f g Z h k H) |% k).
 Proof.
     split.
@@ -223,14 +225,32 @@ Proof.
     apply mapoid_c_factorisation.
 Qed.
 
-Lemma univ_pushout (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) = (g||>k)):
-    exists! z:mapoid (PushoutObject A B C f g) Z, ((mapoid_b A B C f g ||> z) = h) /\ ((mapoid_c A B C f g ||> z) = k).
-Proof.  
+Lemma univ_pushout (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: (f||>h) |% (g||>k)):
+    (exists z:mapoid (PushoutObject A B C f g) Z, ((mapoid_b A B C f g ||> z) |% h) /\ ((mapoid_c A B C f g ||> z) |% k))
+    /\
+    (forall y z:mapoid (PushoutObject A B C f g) Z,(((mapoid_b A B C f g ||> z) |% h) /\ (((mapoid_c A B C f g) ||> z) |% k) /\ (((mapoid_b A B C f g) ||> y) |% h) /\ (((mapoid_c A B C f g) ||> y) |% k)) -> z|%y).
+Proof.
+    split.  
     exists (mapoid_factorisation A B C f g Z h k H ).
-    unfold unique.
+    split.
+    apply (mapoid_b_factorisation A B C f g Z h k H).
+
+    apply (mapoid_c_factorisation A B C f g Z h k H).
+
+    intro.
+    intro.
+    intro.
+    destruct H0.
+    destruct H1.
+    destruct H2.
+    apply extensionality.
     intros.
-    (* need to rephrase this in terms of |% so manually unfold the exists unique *)
-    
+    elim a1.
+    intro.
+    apply (extensionality H1).    
+
+
+
 Section pushout.
 
 Variables A B C Z:objoid.
