@@ -1,43 +1,28 @@
 Section objoid.
 
-Structure objoid:Type :={
-carrier:Type;
-eq:carrier->carrier->Prop;
-eq_refl (x:carrier): eq x x;
-eq_sym (x y:carrier) (H:eq x y): eq y x;
-eq_trans (x y z:carrier) (H1:eq x y) (H2:eq y z): eq x z
+Require Import Coq.Classes.SetoidClass.
+Require Import Coq.Setoids.Setoid.
+
+Structure mapoid (A B:Type) (a:Setoid A) (b: Setoid B) := {
+map:> A->B;
+pres (a1 a2:A) (H:a1=a2): map a1=map a2
 }.
 
-Arguments eq {o}.
-Arguments eq_refl {o} {x}.
-Arguments eq_sym {o} {x} {y}.
-Arguments eq_trans {o} {x} {y} {z}.
-Infix "~" := eq (at level 80, right associativity).
+Arguments mapoid {A}{B}.
+Arguments map {A} {B} {a}{b}.
+Arguments pres {A} {B}.
 
-Structure mapoid (a b:objoid) := {
-map:carrier a-> carrier b;
-pres (a1 a2:carrier a) (H:a1~a2): map a1~map a2
-}.
+Definition apply (A B:Type) (a:Setoid A) (b:Setoid B) (a1:A) (f:mapoid a b) := map f a1.
 
-Arguments map {a} {b}.
-Arguments pres {a} {b}.
-
-Definition apply (a b:objoid) (a1:carrier a) (f:mapoid a b) := map f a1.
-
-Arguments apply {a} {b}.
-Infix "|>" := apply (at level 71, left associativity).
+Arguments apply {A} {B} {a}{b}.
+Infix "|>" := apply (at level 11, left associativity).
 
 End objoid.
 
-Arguments eq {o}.
-Arguments eq_refl {o} {x}.
-Arguments eq_sym {o} {x} {y}.
-Arguments eq_trans {o} {x} {y} {z}.
+Arguments mapoid {A}{B}.
+Arguments map {A} {B} {a}{b}.
+Arguments pres {A} {B}.
+Arguments apply {A} {B} {a}{b}.
 
-
-Arguments map {a} {b}.
-Arguments pres {a} {b}.
-Arguments apply {a} {b}.
-
-Infix "~" := eq (at level 80, right associativity).
-Infix "|>" := apply (at level 71, left associativity).
+Infix "~" := eq (at level 20, right associativity).
+Infix "|>" := apply (at level 11, left associativity).
