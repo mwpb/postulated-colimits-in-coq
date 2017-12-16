@@ -28,3 +28,16 @@ Arguments apply {a} {b}.
 Infix "|>" := apply (at level 71, left associativity).
 
 End objoid.
+
+Arguments eq {o}.
+Arguments eq_refl {o} {x}.
+Arguments eq_sym {o} {x} {y}.
+Arguments eq_trans {o} {x} {y} {z}.
+
+
+Arguments map {a} {b}.
+Arguments pres {a} {b}.
+Arguments apply {a} {b}.
+
+Infix "~" := eq (at level 80, right associativity).
+Infix "|>" := apply (at level 71, left associativity).

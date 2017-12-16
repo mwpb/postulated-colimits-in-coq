@@ -1,21 +1,6 @@
 Add LoadPath "/Users/mat/Documents/gitRepos/coq/".
 Require Import objoidAndMapoid.
 
-
-Arguments eq {o}.
-Arguments eq_refl {o} {x}.
-Arguments eq_sym {o} {x} {y}.
-Arguments eq_trans {o} {x} {y} {z}.
-
-
-Arguments map {a} {b}.
-Arguments pres {a} {b}.
-Arguments apply {a} {b}.
-
-
-Infix "~" := eq (at level 80, right associativity).
-Infix "|>" := apply (at level 71, left associativity).
-
 Section po.
 
 Structure PushOut (A B C:objoid) (f:mapoid A B) (g:mapoid A C):Type := {
