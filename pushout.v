@@ -1,295 +1,299 @@
-Variables X Y Z:Type.
-Inductive DU :=
-| x:X->DU
-| y:Y->DU.
-
-Variable F:X->Z.
-Variable G:Y->Z.
-
-Definition out (x:DU):Z :=
-match x with
-| x x1 => F(x1)
-| y y1 => G(y1)
-end.
-
-Section BinRel.
-
-Variable t:Type.
-Definition Relation:=t->t->Prop.
-Variable r:Relation.
-
-Definition Reflexive :=
-  forall x:t,
-  r x x.
-
-Definition Symmetric:=
-  forall x y:t,
-  r x y -> r y x.
-
-Definition Transitive:=
-  forall x y z:t,
-  r x y -> r y z ->
-  r x z.
-
-End BinRel.
-
-Arguments Reflexive {t}.
-Arguments Transitive {t}.
-Arguments Symmetric {t}.
-
-Section Setoid.
-
-Structure Setoid: Type:= {
-  Carrier :> Type;
-  Equal: Relation Carrier;
-  Prf_refl : Reflexive Equal;
-  Prf_trans : Transitive Equal;
-  Prf_sym : Symmetric Equal}.
-
-Arguments Equal {s}.
-
-Lemma Equal_refl:
-  forall s:Setoid,
-  forall s1: Carrier s,
-  Equal s1 s1.
-Proof.
-intros.
-apply Prf_refl.
-Qed.
-
-Infix "~" := Equal (at level 80, right associativity). 
-
-Lemma Equal_sym:
-  forall s:Setoid,
-  forall s1 s2:s,
-  s1 ~ s2 -> s2 ~ s1.
-Proof.
-intros.
-apply Prf_sym.
-apply H.
-Qed.
-
-Lemma Equal_trans:
-  forall s:Setoid,
-  forall s1 s2 s3:s,
-  s1~s2 -> s2~s3 -> s1~s3.
-Proof.
-intro.
-apply Prf_trans.
-Qed.
-
-End Setoid.
-
-Arguments Equal {s}.
-Arguments Prf_trans {s} {x} {y} {z}.
-Arguments Prf_refl {s} {x}.
-Arguments Prf_sym {s} {x} {y}.
-
-Infix "~" := Equal (at level 80, right associativity). 
-
-Section Mapoids.
-
-Variables s s' s'':Setoid.
-
-Definition MapLaw (f:s->s') :=
-  forall s1 s2:s,
-  s1~s2 -> (f s1)~(f s2).
-
-Structure Mapoid: Type := {
-  Map:> s->s';
-  Prf_pres: MapLaw Map}.
-
-End Mapoids.
-
-Section Ext.
-
-Variables s s':Setoid.
-
-Definition mapoid_sim (f:Mapoid s s') (g:Mapoid s s'):=
-  forall s1:s,
-  f s1 ~ g s1.
-
-Definition id_fn (s:Setoid) := fun x:s => x.
-
-Lemma id_pres (t:Setoid): MapLaw t t (fun x => x).
-Proof.
-intro.
-intro.
-intro.
-apply H.
-Qed.
-
-Definition id_mapoid (s:Setoid) : Mapoid s s := {|
-  Map := id_fn s;
-  Prf_pres := id_pres s|}.
-
-Infix "\" := mapoid_sim (at level 80, right associativity). 
-
-End Ext.
-
-Arguments mapoid_sim {s} {s'}.
-
-Section Composition.
-
-Variables s s' s'':Setoid.
-
-Lemma law_comp (f:Mapoid s s') (g:Mapoid s' s''):
-  MapLaw s s'' (fun x => g (f x)).
-Proof.
-intro.
-intro.
-intro.
-apply Prf_pres.
-apply Prf_pres.
-apply H.
-Qed.
-
-Definition comp (f:Mapoid s s') (g:Mapoid s' s'') := {|
-  Map := fun x => g (f x);
-  Prf_pres := law_comp f g|}.
-
-End Composition.
-
-Arguments comp {s} {s'} {s''}.
-
-Section GenEq.
-
-Variable A:Type.
-Variable R: A -> A -> Prop.
-
-Inductive gen_equiv : A -> A -> Prop :=
-  | inc (a b:A): (R a b) -> gen_equiv a b
-  | refl (a:A): gen_equiv a a
-  | sym (a b:A): gen_equiv a b -> gen_equiv b a
-  | trans (a b c:A): gen_equiv a b -> gen_equiv b c -> gen_equiv a c.
-
-Lemma gen_equiv_refl: Reflexive gen_equiv.
-Proof.
-intro.
-apply refl.
-Qed.
-Lemma gen_equiv_trans: Transitive gen_equiv.
-Proof.
-intro.
-apply trans.
-Qed.
-Lemma gen_equiv_sym: Symmetric gen_equiv.
-Proof.
-intro.
-apply sym.
-Qed.
-
-End GenEq.
-
-Section GenSetoid.
-
-Arguments gen_equiv {A}.
-Arguments gen_equiv_refl {A} {R}.
-Arguments gen_equiv_sym {A} {R}.
-Arguments gen_equiv_trans {A} {R}.
-
-Variable A:Type.
-Variable R: A -> A -> Prop.
-
-
-Definition gen_setoid : Setoid :=
-{|
-  Carrier := A;
-  Equal := gen_equiv R;
-  Prf_refl := gen_equiv_refl;
-  Prf_trans := gen_equiv_trans;
-  Prf_sym := gen_equiv_sym
-|}.
-
-End GenSetoid.
-
-Section Test.
-
-Variables a b c:Setoid.
-Variable f:Mapoid a b.
-Variable g:Mapoid a c.
-
-Inductive d0 : Type :=
-  | iota_b: b->d0
-  | iota_c: c->d0.
-
-Inductive d0eq: d0 -> d0 -> Prop :=
-  | inc_b (b1 b2:b): b1~b2 -> d0eq (iota_b b1) (iota_b b2)
-  | inc_c (c1 c2:c): c1~c2 -> d0eq (iota_c c1) (iota_c c2)
-  | inc_a (x:a): d0eq (iota_b (f x)) (iota_c (g x)).
-
-Definition d := gen_setoid d0 d0eq.
-
-End Test.
-
-Section Category.
-
-Structure Category :Type := {
-  obj: Setoid;
-  arr: Setoid;
-  source: Mapoid arr obj;
-  target: Mapoid arr obj;
-  id: Mapoid obj arr;
-  section_s (x:obj): x~source (id x);
-  section_t (x:obj): target (id x)~x;
-  mult (f g:arr): (target f ~ source g) -> arr;
-  mult_t (f g:arr) (H: target f ~ source g): target (mult f g H) ~ target g;
-  mult_s (f g:arr) (H: target f ~ source g): source (mult f g H) ~ source f;
-  left_id (f:arr): (mult (id (source f)) f (section_t (source f))) ~ f;
-  right_id (f:arr): (mult f (id (target f)) (section_s (target f))) ~ f;
-  assoc (f g h:arr) (H1:target f~source g) (H2:target g~source h):
-    mult (mult f g H1) h (Prf_trans (mult_t f g H1) H2) ~ mult f (mult g h H2) (Prf_trans H1 (Prf_sym (mult_s g h H2)))
-  }.
-
-End Category.
-
-Arguments source {c}.
-Arguments target {c}.
-Arguments id {c}.
-Arguments mult {c}.
-
-Section FunctorData.
-
-Variables C D: Category.
-Variable ArrMap: Mapoid (arr C) (arr D).
-Variable ObjMap: Mapoid (obj C) (obj D).
-Variables f g:arr C.
-Variable x:obj C.
-
-Variable Pres_s: ObjMap (source f)~source (ArrMap f).
-Variable Pres_t: target (ArrMap f)~ObjMap (target f).
-Variable Pres_id: id (ObjMap x)~ArrMap (id x).
-
-Variable composable: target f ~ source g.
-
-Lemma Pres_composable: target (ArrMap f)~source (ArrMap g).
-Proof.
-apply Prf_sym.
-apply (Prf_trans Pres_t).
-
-Section Functor.
-
-Structure Functor (C:Category) (D:Category) : Type := {
-  ArrMap: Mapoid (arr C) (arr D);
-  ObjMap: Mapoid (obj C) (obj D);
-  Pres_s (f:arr C): source (ArrMap f)~ObjMap (source f);
-  Pres_t (f:arr C): target (ArrMap f)~ObjMap (target f);
-  Pres_id (x:obj C): id (ObjMap x)~ArrMap (id x);
-  Pres_mul (f g:arr C) (H:target f~source g): (ArrMap (mult f g H))~ mult (ArrMap f) (ArrMap g)
+Add LoadPath "/Users/mat/Documents/gitRepos/coq/".
+Require Import objoidAndMapoid.
+
+
+Require Import Coq.Classes.SetoidClass.
+Require Import Coq.Setoids.Setoid.
+
+Section pushout.
+
+(* We specify what we want a pushout to be. *)
+
+Structure Pushout (A B C:objoid) (f:mapoid A B) (g:mapoid A C):Type := {
+    object:objoid;
+    i0:mapoid B object;
+    i1:mapoid C object;
+    univ_exist (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: forall a1:A, a1 |> f |> h = a1 |> g|> k):
+        (exists z:mapoid object Z, forall b:B, forall c:C,
+            ( b |> i0 |> z = b|>h) /\ ( c|>i1|> z = c|>k));
+    univ_unique (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: forall a1:A, a1 |> f |> h = a1 |> g|> k):
+    (forall y z:mapoid object Z, (
+            (forall b:B, b|>i0|>z = b|>h) /\
+            (forall c:C, c|>i1|>z = c|>k) /\
+            (forall b:B, b|>i0|>y = b|>h) /\
+            (forall c:C, c|>i1|>y = c|>k)) 
+                -> forall d:object, d|>z = d|>y)
 }.
 
+(* We define a function that constructs the pushout. *)
 
+(*  First we define the pushout object.
+    Remember this is before asserting the equivalence relation. *)
+Inductive DisjointUnion (B C:objoid):Type :=
+| b: carrier B -> DisjointUnion B C
+| c: carrier C -> DisjointUnion B C.
 
+Arguments b {B} {C}.
+Arguments c {B} {C}.
 
+(* Now we define the equivalence relation on the pushout object. *)
+Inductive PushoutEq (A B C:objoid) (f:mapoid A B) (g:mapoid A C): DisjointUnion B C -> DisjointUnion B C -> Prop :=
+| beq (b1 b2:carrier B) (H:b1=b2):  PushoutEq A B C f g (b b1) (b b2)
+| ceq (c1 c2:carrier C) (H:c1=c2): PushoutEq A B C f g (c c1) (c c2)
+| aeq (a:carrier A): PushoutEq A B C f g (b (a|>f)) (c (a|>g))
+| refl (d1:DisjointUnion B C): PushoutEq A B C f g d1 d1
+| sym (d1 d2:DisjointUnion B C) (H:PushoutEq A B C f g d1 d2): PushoutEq A B C f g d2 d1
+| trans (d1 d2 d3:DisjointUnion B C) (H1:PushoutEq A B C f g d1 d2) (H2:PushoutEq A B C f g d2 d3): PushoutEq A B C f g d1 d3.
 
+Arguments PushoutEq {A}{B}{C}.
+Arguments refl {A} {B} {C} {f} {g}.
+Arguments sym {A} {B} {C} {f} {g}.
+Arguments trans {A} {B} {C} {f} {g}.
 
+(* So we can use the equivalence relation to get a setoid. *)
+Program Instance PushoutSetoid (A B C:objoid) (f:mapoid A B) (g:mapoid A C): Setoid (DisjointUnion B C) :=
+{
+    equiv:=PushoutEq f g;
+    setoid_equiv:= {|
+        Equivalence_Reflexive := refl;
+        Equivalence_Symmetric := sym;
+        Equivalence_Transitive :=trans
+    |}
+}.
 
+(* And then combine this with the disjoint union to get an objoid. *)
+Definition PushoutObjoid (A B C:objoid) (f:mapoid A B) (g:mapoid A C):objoid := {|
+    carrier:= DisjointUnion B C;
+    eq:= PushoutSetoid A B C f g
+|}.
 
+Arguments PushoutObjoid {A}{B}{C}.
 
+(*  The following is a little awkward.
+    We seem to need three different maps for essentially the same thing:
+        1. the inductive generator b;
+        2. the function ib;
+        3. the mapoid mapoid_b *)
 
+Definition ib (A B C:objoid) (f:mapoid A B) (g:mapoid A C):
+    carrier B -> carrier (PushoutObjoid f g) :=
+        b.
 
+Lemma b_pres (A B C:objoid) (f:mapoid A B) (g:mapoid A C):
+    forall a1 a2 : B, a1 = a2 -> ib A B C f g a1 = ib A B C f g a2.
+Proof.
+    intros.
+    rewrite H.
+    apply eq_refl.
+Qed.
 
+Definition mapoid_b (A B C:objoid) (f:mapoid A B) (g:mapoid A C):mapoid B (PushoutObjoid f g) := {|
+map:= ib A B C f g;
+pres:= b_pres A B C f g
+|}.
 
+Arguments mapoid_b {A}{B}{C}.
 
+(*  Two awkward manual 'tactics'.
+    I can't figure out how to do the proof in uniqueness_univ without them.
+    Might well be because of the inefficient definitions above.
+    (But does work though...) *)
 
+Lemma mapoid_b_unfold (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (b1:B) (Z:objoid) (z:mapoid (PushoutObjoid f g) Z):
+    b1|>mapoid_b f g|> z = ib A B C f g b1 |>z.
+Proof.
+    apply pres.
+    apply mapoid_b.
+    apply eq_refl.
+Qed.
 
+Lemma elementwise_b (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (b1:B):
+    ib A B C f g b1 = b b1.
+Proof.
+    auto.
+Qed.
+
+Definition ic (A B C:objoid) (f:mapoid A B) (g:mapoid A C): carrier C -> carrier (PushoutObjoid f g) := c.
+
+Lemma c_pres (A B C:objoid) (f:mapoid A B) (g:mapoid A C):
+    forall a1 a2 : C, a1 = a2 -> ic A B C f g a1 = ic A B C f g a2.
+Proof.
+    intros.
+    rewrite H.
+    apply eq_refl.
+Qed.
+
+Definition mapoid_c (A B C:objoid) (f:mapoid A B) (g:mapoid A C):mapoid C (PushoutObjoid f g) := {|
+map:= ic A B C f g;
+pres:= c_pres A B C f g
+|}.
+
+Arguments mapoid_c {A}{B}{C}.
+
+Lemma mapoid_c_unfold (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (c1:C) (Z:objoid) (z:mapoid (PushoutObjoid f g) Z):
+    c1|>mapoid_c f g|> z = ic A B C f g c1 |>z.
+Proof.
+    apply pres.
+    apply mapoid_c.
+    apply eq_refl.
+Qed.
+
+Lemma elementwise_c (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (c1:C):
+    ic A B C f g c1 = c c1.
+Proof.
+    auto.
+Qed.
+
+(*  We define the factorisation and then prove the universal property of the pushout. *)
+
+Definition factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: forall a:A, a|>f|>h = a|>g|>k) (d1:carrier (PushoutObjoid f g)):
+    carrier Z :=
+    match d1 with
+    | b b1 => b1 |> h
+    | c c1 => c1 |> k
+    end.
+
+Lemma pres_factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: forall a:A, a|>f|>h = a|>g|>k) (d1 d2:(carrier (PushoutObjoid f g))) (H2:d1=d2):
+    factorisation A B C f g Z h k H d1 = factorisation A B C f g Z h k H d2.
+Proof.
+    rewrite H2.
+    apply eq_refl.
+Qed.   
+
+Definition mapoid_factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: forall a:A, a|>f|>h = a|>g|>k):
+    mapoid (PushoutObjoid f g) Z := {|
+    map:=factorisation A B C f g Z h k H;
+    pres:=pres_factorisation A B C f g Z h k H
+    |}.
+
+Arguments mapoid_factorisation {A}{B}{C}.
+
+Lemma mapoid_b_factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: forall a:A, a|>f|>h = a|>g|>k):
+    (forall b:B, b |> mapoid_b f g |> mapoid_factorisation f g Z h k H = b|>h).
+Proof.
+    intro.
+    simpl.
+    apply eq_refl.
+Qed.
+
+Lemma mapoid_c_factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: forall a:A, a|>f|>h = a|>g|>k):
+    (forall c:C, c|> mapoid_c f g |> mapoid_factorisation f g Z h k H = c|>k).
+Proof.
+intro.
+simpl.
+apply eq_refl.
+Qed.
+
+Arguments mapoid_b_factorisation {A}{B}{C}.
+Arguments mapoid_c_factorisation {A}{B}{C}.
+
+Lemma existence_univ (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: forall a:A, a|>f|>h = a|>g|>k):
+    (exists z:mapoid (PushoutObjoid f g) Z, forall b:B, forall c:C,
+        ( b |> mapoid_b f g |> z = b|>h) /\ ( c|> mapoid_c f g|> z = c|>k)).
+Proof.
+    exists (mapoid_factorisation f g Z h k H).
+    intros.
+    split.
+    simpl.
+    apply eq_refl.
+
+    simpl.
+    apply eq_refl.
+Qed.
+
+Lemma uniqueness_univ (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: forall a:A, a|>f|>h = a|>g|>k):
+    (forall y z:mapoid (PushoutObjoid f g) Z, 
+        ((forall b:B, b|>mapoid_b f g|>z = b|>h) /\
+        (forall c:C, c|>mapoid_c f g|>z = c|>k)  /\
+        (forall b:B, b|>mapoid_b f g|> y = b|>h) /\
+        (forall c:C,c|>mapoid_c f g|> y = c|>k)) 
+            -> forall d:(PushoutObjoid f g), d|>z = d|>y).
+Proof.
+    intros.
+    elim d.
+    simpl in H0.
+
+    intro.
+    destruct H0 as (H0&H1&H2&H3).
+    specialize (H0 c0).
+    specialize (H2 c0).
+    rewrite (elementwise_b A B C f g) in H0.
+    rewrite (elementwise_b A B C f g) in H2.
+    rewrite H0.
+    rewrite H2.
+    apply eq_refl.
+
+    intro.
+    simpl in H0.
+    destruct H0 as (H0&H1&H2&H3).
+    specialize (H1 c0).
+    specialize (H3 c0).
+    rewrite (elementwise_c A B C f g) in H1.
+    rewrite (elementwise_c A B C f g) in H3.
+    rewrite H1.
+    rewrite H3.
+    apply eq_refl.
+Qed.
+
+(* The following function is the one we want to expose in the encapsulation. *)
+
+Definition mk_pushout (A B C:objoid) (f:mapoid A B) (g:mapoid A C): Pushout A B C f g:= {|
+        object := PushoutObjoid f g;
+        i0 := mapoid_b f g;
+        i1 := mapoid_c f g;
+        univ_exist := existence_univ A B C f g;
+        univ_unique := uniqueness_univ A B C f g
+    |}.
+        
+
+End pushout.
+
+(* category from Lean project *)
+
+(* namespace category
+
+open objoid
+
+structure deductive_system :=
+    (obj:objoid)
+    (arr:objoid)
+    (s: mapoid arr obj)
+    (t: mapoid arr obj)
+    (e: mapoid obj arr)
+    (section_s: ∀ x:obj.carrier, x |> e |> s ∼ x)
+    (section_t: ∀ x:obj.carrier, x |> e |> t ∼ x)
+    (comp: ∀ f g:arr.carrier, f |> t ∼ g |> s → arr.carrier)
+    (comp_s: Π f g:arr.carrier, Π (H: f |> t ∼ g |> s), (comp f g H) |> s ∼ f |> s)
+    (comp_t: Π f g:arr.carrier, Π (H: f |> t ∼ g |> s), (comp f g H) |> t ∼ g |> t)
+
+lemma left_id_type (D:deductive_system) (f:D.arr.carrier): f |> D.s |> D.e |> D.t ∼ f |> D.s :=
+begin
+    apply D.section_t
+end
+
+lemma right_id_type (D:deductive_system) (f:D.arr.carrier): f |> D.t = f |> D.t |> D.e |> D.s := 
+begin
+    symmetry,
+    apply D.section_s
+end
+
+lemma assoc_type_1 (D:deductive_system) (f g h: D.arr) (H1:D.t(f)=D.s(g)) (H2:D.t(g)=D.s(h)): D.t(D.comp f g H1) = D.s(h) :=
+begin
+    rewrite D.comp_t,
+    apply H2
+end
+
+lemma assoc_type_2 (D:deductive_system) (f g h:D.arr) (H1:D.t(f)=D.s(g)) (H2:D.t(g)=D.s(h)): D.t(f) = D.s(D.comp g h H2)  :=
+begin
+    rewrite D.comp_s g h H2,
+    apply H1
+end
+
+structure category :=
+    (ded:deductive_system)
+    (left_id: Π (f:ded.arr), (ded.comp (ded.e(ded.s(f))) f (left_id_type ded f)) = f)
+    (right_id: Π (f:ded.arr), (ded.comp f (ded.e(ded.t(f))) (right_id_type ded f)) = f)
+    (assoc: Π (f g h:ded.arr), Π (H1:ded.t(f)=ded.s(g)), Π (H2:ded.t(g)=ded.s(h)),
+        ded.comp (ded.comp f g H1) h (assoc_type_1 ded f g h H1 H2) = ded.comp f (ded.comp g h H2) (assoc_type_2 ded f g h H1 H2))
+
+end category *)
