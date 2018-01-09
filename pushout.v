@@ -168,7 +168,7 @@ Definition mapoid_factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:
 
 Arguments mapoid_factorisation {A}{B}{C}.
 
-Lemma mapoid_b_factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: forall a:A, a|>f|>h = a|>g|>k):
+(* Lemma mapoid_b_factorisation (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: forall a:A, a|>f|>h = a|>g|>k):
     (forall b:B, b |> mapoid_b f g |> mapoid_factorisation f g Z h k H = b|>h).
 Proof.
     intro.
@@ -182,12 +182,13 @@ Proof.
 intro.
 simpl.
 apply eq_refl.
-Qed.
-
+Qed. *)
+(* 
 Arguments mapoid_b_factorisation {A}{B}{C}.
-Arguments mapoid_c_factorisation {A}{B}{C}.
+Arguments mapoid_c_factorisation {A}{B}{C}. *)
 
-Lemma existence_univ (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: forall a:A, a|>f|>h = a|>g|>k):
+Lemma existence_univ (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid)
+    (h:mapoid B Z) (k:mapoid C Z) (H: forall a:A, a|>f|>h = a|>g|>k):
     (exists z:mapoid (PushoutObjoid f g) Z, forall b:B, forall c:C,
         ( b |> mapoid_b f g |> z = b|>h) /\ ( c|> mapoid_c f g|> z = c|>k)).
 Proof.
@@ -201,7 +202,8 @@ Proof.
     apply eq_refl.
 Qed.
 
-Lemma uniqueness_univ (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: forall a:A, a|>f|>h = a|>g|>k):
+Lemma uniqueness_univ (A B C:objoid) (f:mapoid A B) (g:mapoid A C) (Z:objoid)
+    (h:mapoid B Z) (k:mapoid C Z) (H: forall a:A, a|>f|>h = a|>g|>k):
     (forall y z:mapoid (PushoutObjoid f g) Z, 
         ((forall b:B, b|>mapoid_b f g|>z = b|>h) /\
         (forall c:C, c|>mapoid_c f g|>z = c|>k)  /\
