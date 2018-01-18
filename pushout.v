@@ -246,9 +246,21 @@ Definition mk_pushout (A B C:objoid) (f:mapoid A B) (g:mapoid A C): Pushout A B 
         univ_exist := existence_univ A B C f g;
         univ_unique := uniqueness_univ A B C f g
     |}.
-        
 
 End pushout.
+Arguments mk_pushout {A}{B}{C}.
+Arguments i1 {A}{B}{C}{f}{g}.
+
+Section TestPushout.
+
+Variables A B C D:objoid.
+Variable f:mapoid A B.
+Variable g:mapoid A C.
+Variable h:mapoid C D.
+
+Definition P := mk_pushout f g.
+Definition Q := mk_pushout (i1 P) h.
+
 
 (* category from Lean project *)
 
