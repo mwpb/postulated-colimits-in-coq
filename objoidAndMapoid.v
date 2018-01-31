@@ -27,5 +27,40 @@ Arguments map {A} {B}.
 Arguments pres {A} {B}.
 
 Arguments apply {A} {B}.
-
 Infix "|>" := apply (at level 11, left associativity).
+
+Section generators.
+
+Variable A:Type.
+Variable rel:relation A.
+
+Inductive gen_equiv:A->A->Prop:=
+|from_rel (a1 a2:A):(rel a1 a2)->gen_equiv a1 a2
+|refl (a1:A):gen_equiv a1 a1
+|sym (a1 a2:A):gen_equiv a1 a2 -> gen_equiv a2 a1
+|trans (a1 a2 a3:A):gen_equiv a1 a2->gen_equiv a2 a3->gen_equiv a1 a3.
+
+Lemma gen_equiv_refl: Reflexive gen_equiv.
+Proof.
+  unfold Reflexive. intros. apply refl. Qed.
+Lemma gen_equiv_sym: Symmetric gen_equiv.
+Proof.
+  unfold Symmetric. intros. apply sym. apply H. Qed.
+Lemma gen_equiv_trans: Transitive gen_equiv.
+Proof.
+  unfold Transitive. intro. intro. intro. apply trans. Qed. 
+
+Program Instance gen_setoid_inner: Setoid A:=
+  {equiv:=gen_equiv;
+    setoid_equiv:=
+      {|Equivalence_Reflexive:=gen_equiv_refl;
+        Equivalence_Symmetric:=gen_equiv_sym;
+        Equivalence_Transitive:=gen_equiv_trans|}}.
+
+Definition gen_obj:objoid :=
+  {|carrier:=A;
+    eq:=gen_setoid_inner|}.
+
+End generators.
+
+Arguments gen_obj{A}.
