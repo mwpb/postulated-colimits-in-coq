@@ -1,3 +1,10 @@
+(*
+  In emacs use
+     (setq coq-compile-before-require t)
+     (setq coq-load-path-include-current t)
+  in init file.
+*)
+
 Require Import objoidAndMapoid.
 
 Require Import Coq.Classes.SetoidClass.
