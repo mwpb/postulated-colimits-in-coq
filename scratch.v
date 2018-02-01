@@ -1,32 +1,40 @@
-Theorem unit_singleton : forall x : unit, x = tt.
+Require Import Coq.Classes.SetoidClass.
+Require Import Coq.Setoids.Setoid.
+
+Section objArr.
+
+Structure obj:Type:=
+  {carrier:Type;
+   rel:relation carrier;
+   ind (a1 a2:carrier):rel a1 a2 -> a1=a2}.
+
+Arguments rel{o}.
+
+Infix "~" := rel (at level 101, left associativity).
+
+Structure arr (A B:obj):=
+  {map:carrier A->carrier B;
+   pres (a1 a2:carrier A):(a1~a2)->(map(a1)~map(a2))}.
+
+Arguments map{A}{B}.
+
+End objArr.
+
+Arguments rel{o}.
+Infix "~" := rel (at level 101, left associativity).
+
+Variable A:Type.
+Variable relA:relation A.
+
+Inductive EqA:relation A:=
+|inc(a1 a2:A): relA a1 a2 -> EqA a1 a2
+|sym(a1 a2:A):EqA a1 a2 -> EqA a2 a1.
+
+Definition o:=
+  {|carrier:=A;
+    rel:=EqA;
+  ind:=|}.
+
+Lemma tester: forall a1 a2:carrier o, a1~a2.
 Proof.
-    intro.
-    induction x.
-    reflexivity.
-Qed.
-
-Compute bool_ind.
-
-Theorem negb_inverse : forall b : bool, negb (negb b) = b.
-Proof.
-    intros.
-    induction b.
-    unfold negb.
-    reflexivity.
-
-    unfold negb.
-    reflexivity.
-Qed.
-
-
-Theorem n_plus_O : forall n : nat, plus n O = n.
-Proof.
-    intros.
-    induction n.
-    simpl.
-    reflexivity.
-
-    simpl.
-    rewrite IHn.
-    reflexivity.
-Qed.
+  intros. induction (rel a1 a2).
