@@ -7,7 +7,7 @@ Require Import Coq.Setoids.Setoid.
     the Type of the carrier *)
 Structure objoid := {
     carrier:>Type;
-    eq: Setoid carrier
+    eq: Setoid carrier;
 }.
 
 (*  a mapoid is a function between the carriers of two objoids
@@ -34,7 +34,7 @@ Section generators.
 Variable A:Type.
 Variable rel:relation A.
 
-Inductive gen_equiv:A->A->Prop:=
+Inductive gen_equiv:relation A:=
 |from_rel (a1 a2:A):(rel a1 a2)->gen_equiv a1 a2
 |refl (a1:A):gen_equiv a1 a1
 |sym (a1 a2:A):gen_equiv a1 a2 -> gen_equiv a2 a1

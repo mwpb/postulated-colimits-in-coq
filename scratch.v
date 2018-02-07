@@ -1,3 +1,5 @@
+Require Import Coq.Program.Equality.
+
 Require Import Coq.Classes.SetoidClass.
 Require Import Coq.Setoids.Setoid.
 
@@ -5,8 +7,7 @@ Section objArr.
 
 Structure obj:Type:=
   {carrier:Type;
-   rel:relation carrier;
-   ind (a1 a2:carrier):rel a1 a2 -> a1=a2}.
+   rel:>relation carrier}.
 
 Arguments rel{o}.
 
@@ -26,15 +27,17 @@ Infix "~" := rel (at level 101, left associativity).
 Variable A:Type.
 Variable relA:relation A.
 
-Inductive EqA:relation A:=
-|inc(a1 a2:A): relA a1 a2 -> EqA a1 a2
-|sym(a1 a2:A):EqA a1 a2 -> EqA a2 a1.
+Inductive EqA (a1 a2:A):Prop:=
+|inc: relA a1 a2 -> EqA a1 a2
+|sym:EqA a2 a1 -> EqA a1 a2.
+
+Check EqA_ind.
 
 Definition o:=
   {|carrier:=A;
-    rel:=EqA;
-  ind:=|}.
+    rel:=EqA|}.
 
-Lemma tester: forall a1 a2:carrier o, a1~a2.
+Lemma tester: forall a1 a2:carrier o, (a2~a1) -> (a1~a2).
 Proof.
-  intros. induction (rel a1 a2).
+  intros. simpl in H. dependent induction H.
+  - 

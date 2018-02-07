@@ -42,19 +42,11 @@ Arguments b {B} {C}.
 Arguments c {B} {C}.
 
 (* Now we define the equivalence relation on the pushout object. *)
-Inductive PushoutEq (A B C:objoid) (f:mapoid A B) (g:mapoid A C): DisjointUnion B C -> DisjointUnion B C -> Prop :=
+Inductive PushoutEq (A B C:objoid) (f:mapoid A B) (g:mapoid A C): relation (DisjointUnion B C) :=
 | beq (b1 b2:carrier B) (H:b1=b2):  PushoutEq A B C f g (b b1) (b b2)
-| ceq (c1 c2:carrier C) (H:c1=c2): PushoutEq A B C f g (c c1) (c c2)
-| aeq (a:carrier A): PushoutEq A B C f g (b (a|>f)) (c (a|>g))
-| refl (d1:DisjointUnion B C): PushoutEq A B C f g d1 d1
-| sym (d1 d2:DisjointUnion B C) (H:PushoutEq A B C f g d1 d2): PushoutEq A B C f g d2 d1
-| trans (d1 d2 d3:DisjointUnion B C) (H1:PushoutEq A B C f g d1 d2) (H2:PushoutEq A B C f g d2 d3): PushoutEq A B C f g d1 d3.
-
+| ceq (c1 c2:carrier C) (H:c1=c2): PushoutEq A B C f g (c c1) (c c2).
 
 Arguments PushoutEq {A}{B}{C}.
-Arguments refl {A} {B} {C} {f} {g}.
-Arguments sym {A} {B} {C} {f} {g}.
-Arguments trans {A} {B} {C} {f} {g}.
 
 (* And then combine this with the disjoint union to get an objoid. *)
 Definition PushoutObjoid (A B C:objoid) (f:mapoid A B) (g:mapoid A C):objoid :=
@@ -243,11 +235,26 @@ Definition mk_pushout (A B C:objoid) (f:mapoid A B) (g:mapoid A C): Pushout A B 
 End pushout.
 Arguments mk_pushout {A}{B}{C}.
 Arguments i1 {A}{B}{C}{f}{g}.
+Arguments PushoutEq {A}{B}{C}.
+
+Arguments mapoid_c {A}{B}{C}.
+
 
 Section TestPushout.
-
+  
 Variables A B C D:objoid.
 Variable f:mapoid A B.
 Variable g:mapoid A C.
+Variable H:
+  forall a1 a2:A,
+    a1|>f=a2|>f ->
+    a1=a2.
 
 Definition P := mk_pushout f g.
+
+Proposition mapoid_c_mono:
+  forall c1 c2:C,
+    c1|>mapoid_c f g=c2|>mapoid_c f g ->
+    c1=c2.
+Proof.
+  
