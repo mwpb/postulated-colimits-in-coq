@@ -43,7 +43,8 @@ Arguments c {B} {C}.
 
 (* Now we define the equivalence relation on the pushout object. *)
 Inductive PushoutEq (A B C:objoid) (f:mapoid A B) (g:mapoid A C): relation (DisjointUnion B C) :=
-| beq (b1 b2:carrier B) (H:b1=b2):  PushoutEq A B C f g (b b1) (b b2)
+  |aeq(a1:carrier A): PushoutEq A B C f g (b (f(a1))) (c (g(a1)))
+| beq (b1 b2:carrier B) (H:b1=b2): PushoutEq A B C f g (b b1) (b b2)
 | ceq (c1 c2:carrier C) (H:c1=c2): PushoutEq A B C f g (c c1) (c c2).
 
 Arguments PushoutEq {A}{B}{C}.
