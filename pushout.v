@@ -6,7 +6,7 @@
 *)
 
 Require Import objoidAndMapoid.
-
+Require Import Coq.Program.Equality.
 Require Import Coq.Classes.SetoidClass.
 Require Import Coq.Setoids.Setoid.
 
@@ -257,4 +257,4 @@ Proposition mapoid_c_mono:
     c1|>mapoid_c f g=c2|>mapoid_c f g ->
     c1=c2.
 Proof.
-  
+  intros. dependent induction H0. reflexivity. Qed.
