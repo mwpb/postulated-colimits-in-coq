@@ -20,7 +20,8 @@ Structure Pushout (A B C:objoid) (f:mapoid A B) (g:mapoid A C):Type := {
     i1:mapoid C object;
     univ_exist (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: forall a1:A, a1 |> f |> h = a1 |> g|> k):
         (exists z:mapoid object Z, forall b:B, forall c:C,
-            ( b |> i0 |> z = b|>h) /\ ( c|>i1|> z = c|>k));
+                ( b |> i0 |> z = b|>h) /\ ( c|>i1|> z = c|>k));
+    (* The following condition needs to be corrected. *)
     univ_unique (Z:objoid) (h:mapoid B Z) (k:mapoid C Z) (H: forall a1:A, a1 |> f |> h = a1 |> g|> k):
     (forall y z:mapoid object Z, (
             (forall b:B, b|>i0|>z = b|>h) /\
@@ -43,7 +44,7 @@ Arguments c {B} {C}.
 
 (* Now we define the equivalence relation on the pushout object. *)
 Inductive PushoutEq (A B C:objoid) (f:mapoid A B) (g:mapoid A C): relation (DisjointUnion B C) :=
-  |aeq(a1:carrier A): PushoutEq A B C f g (b (f(a1))) (c (g(a1)))
+(* |aeq(a1:carrier A): PushoutEq A B C f g (b (f(a1))) (c (g(a1))) *)
 | beq (b1 b2:carrier B) (H:b1=b2): PushoutEq A B C f g (b b1) (b b2)
 | ceq (c1 c2:carrier C) (H:c1=c2): PushoutEq A B C f g (c c1) (c c2).
 
