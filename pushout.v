@@ -30,18 +30,102 @@ Section pushout.
   Inductive DisjointUnion:Type :=
   |b:B -> DisjointUnion
   |c:C -> DisjointUnion.
+  
+  (* Inductive blist:B->DisjointUnion->Type:= *)
+  (* |singleB (b1:B):blist b1 (b b1) *)
+  (* |consB (c1:C) (x1:DisjointUnion) (m:clist c1 x1) (a1:A) (H2:g(a1)=c1):blist (f(a1)) x1 *)
+  (* with clist:C->DisjointUnion->Type:= *)
+  (* |singleC (c1:C):clist c1 (c c1) *)
+  (* |consC (b1:B) (x1:DisjointUnion) (a1:A) (H:f(a1)=b1):clist (g(a1)) x1. *)
 
-  Inductive PushoutEq: relation DisjointUnion :=
-  |aeq(a1:carrier A): PushoutEq (b (f(a1))) (c (g(a1)))
-  |beq(b1 b2:carrier B) (H:b1~b2): PushoutEq (b b1) (b b2)
-  |ceq(c1 c2:carrier C) (H:c1~c2): PushoutEq (c c1) (c c2)
-  |gen_refl (a1:DisjointUnion):PushoutEq a1 a1
-  |gen_sym (a1 a2:DisjointUnion):PushoutEq a1 a2 ->PushoutEq a2 a1
-  |gen_trans (a1 a2 a3:DisjointUnion):PushoutEq a1 a2->PushoutEq a2 a3->PushoutEq a1 a3.
+  Record PType:Type:=
+    {car:>Type;
+     pt:car}.
 
+  Record PFunc (X Y:PType):Type:=
+    {func:>X->Y;
+     preserves:func(pt X)=pt Y}.
+
+  (* Need to restrict to only those spans allowed by colimit. *)
+  Record span (First Last:PType):Type:=
+    {Rel:PType;
+     S0:PFunc Rel First;
+     S1:PFunc Rel Last}.
+
+  Arguments Rel {First}{Last}.
+  Arguments S0 {First}{Last}.
+  Arguments S1 {First}{Last}.
+  
+  Inductive zigzag (X Y:PType):Type:=
+  |PId:span X Y->zigzag X Y
+  |PCons {W:PType}: span X W -> zigzag W Y -> zigzag X Y.
+
+  Fixpoint appd_zigzag {A B C:PType} (z1:zigzag A B) (z2:zigzag B C):zigzag A C:=
+    match z1 with
+    |PId _ _ s => PCons _ _ s z2
+    |PCons _ _ s t => PCons _ _ s (appd_zigzag t z2)
+    end.
+  
+  Definition rev_span {X Y:PType} (s:span X Y):span Y X:=
+    {|Rel:=Rel s;
+      S0:=S1 s;
+      S1:=S0 s|}.
+  
+  Fixpoint rev_zigzag {X Y:PType} (z1:zigzag X Y):zigzag Y X:=
+    match z1 with
+    |PId _ _ s => PId _ _ (rev_span s)
+    |PCons _ _ s t=> appd_zigzag (rev_zigzag t) (PId _ _ (rev_span s))
+    end.  
+            
+  (* Inductive zz:relation DisjointUnion:= *)
+  (* |bin (b1:B) (x1:DisjointUnion) (l:blist b1 x1): zz (b b1) x1 *)
+  (* |cin (c1:C) (x1:DisjointUnion) (l:clist c1 x1): zz (c c1) x1. *)
+     
+  (* Inductive PushoutEq: relation DisjointUnion := *)
+  (* |aeq(a1:carrier A): PushoutEq (b (f(a1))) (c (g(a1))) *)
+  (* |beq(b1 b2:carrier B) (H:b1~b2): PushoutEq (b b1) (b b2) *)
+  (* |ceq(c1 c2:carrier C) (H:c1~c2): PushoutEq (c c1) (c c2) *)
+  (* |gen_refl (a1:DisjointUnion):PushoutEq a1 a1 *)
+  (* |gen_sym (a1 a2:DisjointUnion):PushoutEq a1 a2 ->PushoutEq a2 a1 *)
+  (* |gen_trans (a1 a2 a3:DisjointUnion):PushoutEq a1 a2->PushoutEq a2 a3->PushoutEq a1 a3. *)
+
+
+  Lemma id_preserves_pt (X:PType):
+      (fun x=>x)(pt X) = pt X.
+  Proof. reflexivity. Qed.
+  Definition id_PFunc (X:PType):=
+    {|func:=fun x => x;
+      preserves:=id_preserves_pt X|}.
+  Definition refl_span (X:PType):span X X:=
+    {|Rel:=X;
+      S0:=id_PFunc X;
+      S1:=id_PFunc X|}.
+  Definition refl_zigzag (X:PType):=
+    PId _ _ (refl_span X).
+
+  Lemma zigzag_refl:
+    forall X:PType,
+      zigzag X X.
+  Proof.
+    intro. apply refl_zigzag. Qed.
+
+  Lemma zigzag_sym:
+    forall X Y:PType,
+      zigzag X Y ->
+      zigzag Y X.
+  Proof.
+    intros. apply rev_zigzag. assumption. Qed.
+
+  Lemma zigzag_trans:
+    forall X Y Z:PType,
+      zigzag X Y -> zigzag Y Z ->
+      zigzag X Z.
+  Proof.
+    intros X Y Z. apply appd_zigzag. Qed.
+  
   Definition pushout_objoid:objoid:=
     {|carrier:=DisjointUnion;
-      eq:=PushoutEq;
+      eq:=zz;
       refl:=gen_refl;
       sym:=gen_sym;
       trans:=gen_trans|}.
@@ -144,14 +228,17 @@ Variable f:mapoid A B.
 Variable g:mapoid A C.
 Variable H:
   forall a1 a2:A,
-    a1|>f=a2|>f ->
-    a1=a2.
+    a1|>f~a2|>f ->
+    a1~a2.
 
 Definition P := mk_pushout f g.
 
 Proposition mapoid_c_mono:
   forall c1 c2:C,
-    c1|>mapoid_c f g=c2|>mapoid_c f g ->
-    c1=c2.
+    c1|>mapoid_c f g~c2|>mapoid_c f g ->
+    c1~c2.
 Proof.
-  intros. dependent induction H0. reflexivity. Qed.
+  intros. simpl in H0. dependent induction H0.
+  -  assumption.
+  -  apply refl.
+     - 
