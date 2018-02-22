@@ -63,6 +63,7 @@ Arguments map {A} {B}.
 Arguments pres {A} {B}.
 Arguments mapoid_ext {A}{B}.
 Arguments mapoid_app {A}{B}{f}{f2}.
+Arguments sym {o}{x}{y}.
 
 Arguments apply {A} {B}.
 Arguments comp {A}{B}{C}.

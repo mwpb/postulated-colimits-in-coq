@@ -10,6 +10,142 @@ Require Import Coq.Program.Equality.
 Require Import Coq.Classes.SetoidClass.
 Require Import Coq.Setoids.Setoid.
 
+Section Coequaliser.
+
+  Variables R X:objoid.
+  Variables s t:mapoid R X.
+
+  Structure coequaliser:Type:=
+    {object:objoid;
+     arrow:mapoid X object;
+     univ:
+       forall Z:objoid, forall z:mapoid X Z,
+           s||>z = t||>z ->
+           exists! y:mapoid object Z,
+             arrow||>y = z}.
+  
+  Inductive span(x1 x2:X):=
+  |xid(H:x1~x2):span x1 x2
+  |st(r:R) (H:x1~(s(r))) (H2:x2~(t(r))): span x1 x2
+  |ts(r:R) (H:x2~(s(r))) (H2:x1~(t(r))): span x1 x2.
+
+  Definition span_rev{x1 x2:X}(s1:span x1 x2):span x2 x1:=
+    match s1 with
+    |xid _ _ H=>xid x2 x1 (sym H)
+    |st _ _ r H H2=>ts _ _ r H H2
+    |ts _ _ r H H2=>st _ _ r H H2
+    end.
+
+  Inductive zigzag(x1 x2:X):Prop:=
+  |zspan(s1:span x1 x2):zigzag x1 x2
+  |zcons(x3:X)(s1:span x1 x3)(z1:zigzag x3 x2): zigzag x1 x2.
+
+  Arguments zspan {x1}{x2}.
+  Arguments zcons {x1}{x2}.
+  Fixpoint zigzag_append {x1 x2 x3:X} (z1:zigzag x1 x2) (z2:zigzag x2 x3): zigzag x1 x3:=
+    match z1 with
+    |zspan s1=>zcons _ s1 z2
+    |zcons _ s1 t=>zcons _ s1 (zigzag_append t z2)
+    end.
+
+  Fixpoint zigzag_rev {x1 x2:X}(z1:zigzag x1 x2):zigzag x2 x1:=
+    match z1 with
+    |zspan s1=> zspan (span_rev s1)
+    |zcons _ s1 t=>zigzag_append (zigzag_rev t) (zspan (span_rev s1))
+    end.
+
+  Lemma zigzag_refl:
+    forall x:X,
+      zigzag x x.
+  Proof.
+    intro. apply zspan. apply xid. reflexivity. Qed.
+
+  Lemma zigzag_sym:
+    forall x1 x2:X,
+      zigzag x1 x2 ->
+      zigzag x2 x1.
+  Proof.
+    intros. apply zigzag_rev. assumption. Qed.
+
+  Lemma zigzag_trans:
+    forall x1 x2 x3:X,
+      zigzag x1 x2 -> zigzag x2 x3 ->
+      zigzag x1 x3.
+  Proof.
+    intros x1 x2 x3. apply zigzag_append. Qed.
+
+  Definition Q:objoid:=
+    {|carrier:=X;
+      eq:=zigzag;
+      refl:=zigzag_refl;
+      sym:=zigzag_sym;
+      trans:=zigzag_trans|}.
+
+  Lemma id_pres:
+    forall x1 x2:X,
+      x1~x2->
+      (fun x:X=>x:Q)(x1) ~ (fun x=>x)(x2).
+  Proof.
+    intros. simpl. apply zspan. apply xid. assumption. Qed.
+  Definition q:mapoid X Q:=
+    {|map:=fun x:X => x:Q;
+      pres:=id_pres|}.
+
+  Definition fact_arrow(Z:objoid) (z:mapoid X Z):Q->Z:=
+    fun x:Q => z(x).
+
+  Check mapoid_ext.
+  Lemma fact_arrow_pres(Z:objoid) (z:mapoid X Z) (H:s||>z = t||>z):
+    forall q1 q2:Q,
+      q1~q2->
+      fact_arrow Z z q1~fact_arrow Z z q2.
+  Proof.
+    intros. induction H0.
+    - induction s1.
+      -- unfold fact_arrow. apply pres. assumption.
+      -- unfold fact_arrow. apply sym in H2. rewrite H0.
+         rewrite <- H2. apply mapoid_app with r in H.
+         simpl in H. assumption.
+      -- unfold fact_arrow. apply sym in H2. rewrite H0.
+         rewrite <- H2. apply mapoid_app with r in H.
+         simpl in H. apply sym in H. assumption.
+    - unfold fact_arrow in IHzigzag. unfold fact_arrow.
+      induction s1.
+      -- rewrite H1. assumption.
+      -- apply mapoid_app with r in H. simpl in H.
+         rewrite H1. rewrite H. rewrite <- H2. assumption.
+      -- apply mapoid_app with r in H. simpl in H.
+         rewrite H2. rewrite <- H. rewrite <- H1. assumption.
+  Qed.     
+    
+  Definition factorisation (Z:objoid) (z:mapoid X Z) (H:s||>z = t||>z):mapoid Q Z:=
+    {|map:=fact_arrow Z z;
+      pres:=(fact_arrow_pres Z z H)|}.
+
+  Arguments factorisation {Z}{z}.
+  
+  Proposition prf_univ:
+    forall Z:objoid, forall z:mapoid X Z,
+        s||>z = t||>z ->
+        exists! y:mapoid Q Z,
+          q||>y = z.
+  Proof.
+    intros. unfold unique.
+    - exists (factorisation H). split.
+      -- apply mapoid_ext. intro. simpl. unfold fact_arrow.
+         apply pres. apply refl.
+      -- intros. apply mapoid_ext. intro. simpl.
+         unfold fact_arrow. rewrite <- H0. simpl. apply refl.
+  Qed.
+
+  Definition mk_coequaliser:coequaliser:=
+    {|object:=Q;
+      arrow:=q;
+      univ:=prf_univ|}.  
+  
+End Coequaliser.
+
+
 Section pushout.
 
   Variables A B C:objoid.
@@ -42,6 +178,13 @@ Section pushout.
     {car:>Type;
      pt:car}.
 
+  Definition cInC(c1:C):=
+    {|car:=C;
+      pt:=c1|}.
+  Definition bInB(b1:B):=
+    {|car:=B;
+      pt:=b1|}.
+
   Record PFunc (X Y:PType):Type:=
     {func:>X->Y;
      preserves:func(pt X)=pt Y}.
@@ -55,6 +198,32 @@ Section pushout.
   Arguments Rel {First}{Last}.
   Arguments S0 {First}{Last}.
   Arguments S1 {First}{Last}.
+  Lemma id_preserves_pt (X:PType):
+      (fun x=>x)(pt X) = pt X.
+  Proof. reflexivity. Qed.
+  Definition id_PFunc (X:PType):=
+    {|func:=fun x => x;
+      preserves:=id_preserves_pt X|}.
+  Definition refl_span (X:PType):span X X:=
+    {|Rel:=X;
+      S0:=id_PFunc X;
+      S1:=id_PFunc X|}.
+
+  Definition spanBB(b1:B):=
+    {x:span (bInB b1) (bInB b1)| x = refl_span (bInB b1)}.
+  Definition spanCC(c1:C):=
+    {x:span (cInC c1) (cInC c1)| x = refl_span (cInC c1)}.
+  Definition spanBC(a1:A):=
+    {x:span (bInB (f a1)) (cInC (g a1))| }
+  
+  Inductive zigzag:relation DisjointUnion:=
+  |bnil(b1:B):zigzag (b b1) (b b1)
+  |cnil(c1:C):zigzag (c c1) (c c1)
+  |bunit(b1:B)(x3:DisjointUnion):bnil b1->zigzag (b b1) x3->zigzag (b b1) x3.
+
+  Definition zigzag_app{x1 x2 x3:DisjointUnion}():
+  
+  
   
   Inductive zigzag (X Y:PType):Type:=
   |PId:span X Y->zigzag X Y
@@ -90,16 +259,6 @@ Section pushout.
   (* |gen_trans (a1 a2 a3:DisjointUnion):PushoutEq a1 a2->PushoutEq a2 a3->PushoutEq a1 a3. *)
 
 
-  Lemma id_preserves_pt (X:PType):
-      (fun x=>x)(pt X) = pt X.
-  Proof. reflexivity. Qed.
-  Definition id_PFunc (X:PType):=
-    {|func:=fun x => x;
-      preserves:=id_preserves_pt X|}.
-  Definition refl_span (X:PType):span X X:=
-    {|Rel:=X;
-      S0:=id_PFunc X;
-      S1:=id_PFunc X|}.
   Definition refl_zigzag (X:PType):=
     PId _ _ (refl_span X).
 
