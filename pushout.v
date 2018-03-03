@@ -32,42 +32,62 @@ Section Coequaliser.
        forall Z:objoid, forall y z:mapoid coeq_obj Z,
            coeq_arr ||> y = coeq_arr ||> z ->
            y=z}.
-  
-  Inductive span(x1 x2:X):=
-  |xid(H:x1~x2):span x1 x2
-  |st(r:R) (H:x1~(s(r))) (H2:x2~(t(r))): span x1 x2
-  |ts(r:R) (H:x2~(s(r))) (H2:x1~(t(r))): span x1 x2.
-
-  Definition span_rev{x1 x2:X}(s1:span x1 x2):span x2 x1:=
-    match s1 with
-    |xid _ _ H=>xid x2 x1 (sym H)
-    |st _ _ r H H2=>ts _ _ r H H2
-    |ts _ _ r H H2=>st _ _ r H H2
-    end.
 
   Inductive zigzag(x1 x2:X):Prop:=
-  |zspan(s1:span x1 x2):zigzag x1 x2
-  |zcons(x3:X)(s1:span x1 x3)(z1:zigzag x3 x2): zigzag x1 x2.
+  |xid (H:x1~x2):zigzag x1 x2
+  |xcons {x3:X}: (x1~x3)-> (zigzag x3 x2) -> zigzag x1 x2
+  |stcons{r:R}{x3:X} (H1:x1~(s(r))) (H2:x3~(t(r)))
+         (z1:zigzag x3 x2): zigzag x1 x2
+  |tscons{r:R}{x3:X} (H1:x1~(t(r))) (H2:x3~(s(r)))
+         (z1:zigzag x3 x2): zigzag x1 x2.
 
-  Arguments zspan {x1}{x2}.
-  Arguments zcons {x1}{x2}.
+
+  Lemma zz_pres(x1 x2:X):
+    zigzag x1 x2 -> (forall y1:X, x1~y1->zigzag y1 x2).
+  Proof.
+    intros. apply sym in H0. apply xcons with x1.
+    - assumption.
+    - assumption. Qed.
+  
+  
+  (* Lemma zigzag_pres(x1 x2:X): *)
+  (*     zigzag x1 x2 -> forall y1:X, (x1~y1) /\ zigzag y1 x2. *)
+  (* Proof. *)
+  (*   intros. destruct H as(H0&H1). apply sym in H1. *)
+  (*   apply xcons with x1. assumption. assumption. Qed. *)
+
+    (* apply sym in H. apply xcons with x1. *)
+    (* - assumption. *)
+    (* - assumption. Qed. *)
+      
+  Arguments xid{x1}{x2}.
+  Arguments xcons{x1}{x2}{x3}.
+  Arguments stcons{x1}{x2}.
+  Arguments tscons{x1}{x2}.
+  
   Fixpoint zigzag_append {x1 x2 x3:X} (z1:zigzag x1 x2) (z2:zigzag x2 x3): zigzag x1 x3:=
     match z1 with
-    |zspan s1=>zcons _ s1 z2
-    |zcons _ s1 t=>zcons _ s1 (zigzag_append t z2)
+    |xid H=>xcons H z2
+    |xcons H t=>xcons H (zigzag_append t z2)
+    |stcons _ _ H1 H2 t=>stcons _ _ H1 H2 (zigzag_append t z2)
+    |tscons _ _ H1 H2 t=>tscons _ _ H1 H2 (zigzag_append t z2)
     end.
 
   Fixpoint zigzag_rev {x1 x2:X}(z1:zigzag x1 x2):zigzag x2 x1:=
     match z1 with
-    |zspan s1=> zspan (span_rev s1)
-    |zcons _ s1 t=>zigzag_append (zigzag_rev t) (zspan (span_rev s1))
+    |xid H=>xid (sym H)
+    |xcons H t=>zigzag_append (zigzag_rev t) (xid (sym H))
+    |stcons _ _ H1 H2 t=>
+     zigzag_append (zigzag_rev t) (tscons _ _ H2 H1 (xid (refl)))
+    |tscons _ _ H1 H2 t=>
+     zigzag_append (zigzag_rev t) (stcons _ _ H2 H1 (xid (refl)))
     end.
 
   Lemma zigzag_refl:
     forall x:X,
       zigzag x x.
   Proof.
-    intro. apply zspan. apply xid. reflexivity. Qed.
+    intros. apply xid. apply refl. Qed.
 
   Lemma zigzag_sym:
     forall x1 x2:X,
@@ -95,7 +115,7 @@ Section Coequaliser.
       x1~x2->
       (fun x:X=>x:Q)(x1) ~ (fun x=>x)(x2).
   Proof.
-    intros. simpl. apply zspan. apply xid. assumption. Qed.
+    intros. simpl. apply xid. assumption. Qed.
   Definition q:mapoid X Q:=
     {|map:=fun x:X => x:Q;
       pres:=id_pres|}.
@@ -110,22 +130,19 @@ Section Coequaliser.
       fact_arrow Z z q1~fact_arrow Z z q2.
   Proof.
     intros. induction H0.
-    - induction s1.
-      -- unfold fact_arrow. apply pres. assumption.
-      -- unfold fact_arrow. apply sym in H2. rewrite H0.
-         rewrite <- H2. apply mapoid_app with r in H.
-         simpl in H. assumption.
-      -- unfold fact_arrow. apply sym in H2. rewrite H0.
-         rewrite <- H2. apply mapoid_app with r in H.
-         simpl in H. apply sym in H. assumption.
-    - unfold fact_arrow in IHzigzag. unfold fact_arrow.
-      induction s1.
-      -- rewrite H1. assumption.
-      -- apply mapoid_app with r in H. simpl in H.
-         rewrite H1. rewrite H. rewrite <- H2. assumption.
-      -- apply mapoid_app with r in H. simpl in H.
-         rewrite H2. rewrite <- H. rewrite <- H1. assumption.
-  Qed.     
+    - unfold fact_arrow. apply pres. assumption.
+    - unfold fact_arrow. unfold fact_arrow in IHzigzag.
+      apply pres with z x1 x3 in H0. rewrite H0. assumption.
+    - apply mapoid_app with r in H. simpl in H.
+      unfold fact_arrow in IHzigzag. unfold fact_arrow.
+      apply pres with z x1 (s r) in H1.
+      apply pres with z x3 (t r) in H2. rewrite H in H1.
+      rewrite H1. rewrite <- H2. assumption.
+    - apply mapoid_app with r in H. simpl in H.
+      unfold fact_arrow in IHzigzag. unfold fact_arrow.
+      apply pres with z x1 (t r) in H1.
+      apply pres with z x3 (s r) in H2. rewrite <- H in H1.
+      rewrite H1. rewrite <- H2. assumption. Qed.
     
   Definition factorisation (Z:objoid) (z:mapoid X Z) (H:s||>z = t||>z):mapoid Q Z:=
     {|map:=fact_arrow Z z;
@@ -145,14 +162,15 @@ Section Coequaliser.
   Proof.
     intros. apply mapoid_ext. intro.
     apply mapoid_app with a in H. simpl in H. assumption. Qed.
-
+Check stcons.
   Lemma coforks:
     s||>q = t||> q.
   Proof.
-    apply mapoid_ext. simpl. intro. apply zspan. apply st with a.
+    apply mapoid_ext. simpl. intro. apply stcons with a (t a).
     - apply refl.
-    - apply refl. Qed.
-
+    - apply refl.
+    - apply xid. apply refl. Qed.
+  
   Definition mk_coequaliser:coequaliser:=
     {|coeq_obj:=Q;
       coeq_arr:=q;
@@ -169,6 +187,10 @@ Arguments cofork{R}{X}{s}{t}.
 Arguments coeq_induced{R}{X}{s}{t}.
 Arguments coeq_fact{R}{X}{s}{t}.
 Arguments coeq_unique{R}{X}{s}{t}.
+Arguments zigzag{R}{X}{s}{t}.
+(* Arguments zigzag_pres{R}{X}{s}{t}. *)
+Arguments xcons{R}{X}{s}{t}.
+Arguments xid{R}{X}{s}{t}.
 
 Section disjoint_union.
 
@@ -309,6 +331,8 @@ Arguments u1 {B}{C}.
 Arguments du_induced {B}{C}.
 Arguments du_fact {B}{C}.
 Arguments du_unique {B}{C}.
+Arguments c{B}{C}.
+Arguments b{B}{C}.
 
 Section pushout.
 
@@ -317,21 +341,21 @@ Section pushout.
   Variable g:mapoid A C.
 
   Structure Pushout:Type :=
-    {pushout_obj:objoid;
-     i0:mapoid B pushout_obj;
-     i1:mapoid C pushout_obj;
+    {po_obj:objoid;
+     i0:mapoid B po_obj;
+     i1:mapoid C po_obj;
      commutes: f||>i0 = g||>i1;
      po_induced:
        forall (Z:objoid) (h:mapoid B Z) (k:mapoid C Z)
               (H:f ||> h = g ||> k),
-         mapoid pushout_obj Z;
+         mapoid po_obj Z;
      po_fact:
        forall (Z:objoid) (h:mapoid B Z) (k:mapoid C Z)
               (H:f ||> h = g ||> k),
          (i0||>(po_induced Z h k H)=h)/\
          (i1||>(po_induced Z h k H)=k);
      po_unique:
-       forall (Z:objoid) (x y:mapoid pushout_obj Z),
+       forall (Z:objoid) (x y:mapoid po_obj Z),
          (i0||>x=i0||>y)/\
          (i1||>x=i1||>y)->
          x=y}.
@@ -385,7 +409,7 @@ Check mk_coequaliser.
   Qed.
     
   Definition mk_pushout:=
-    {|pushout_obj:=(coeq_obj coeq);
+    {|po_obj:=(coeq_obj coeq);
       i0:=u0 BuC||>(coeq_arr coeq);
       i1:=u1 BuC||>(coeq_arr coeq);
       commutes:=prf_commutes;
@@ -399,9 +423,12 @@ Arguments mk_pushout {A}{B}{C}.
 Arguments i0 {A}{B}{C}{f}{g}.
 Arguments i1 {A}{B}{C}{f}{g}.
 Arguments commutes {A}{B}{C}{f}{g}.
+Arguments po_obj {A}{B}{C}{f}{g}.
 Arguments po_induced {A}{B}{C}{f}{g}.
 Arguments po_fact {A}{B}{C}{f}{g}.
 Arguments po_unique {A}{B}{C}{f}{g}.
+Arguments BuC {B}{C}.
+(* Arguments BuC {B}{C}. *)
 
 Section TestPushout.
   
@@ -415,12 +442,155 @@ Variable H:
 
 Definition P := mk_pushout f g.
 
-Proposition mapoid_c_mono:
-  forall c1 c2:C,
-    c1|>mapoid_c f g~c2|>mapoid_c f g ->
-    c1~c2.
+Lemma f_mono_contractionx1(x1 x2:po_obj P):
+    x1~x2 ->
+    match x1,x2 with
+    |(c c1),(c c2)=>c1~c2
+    |(b b1),(c c2)=>exists a:A, (f(a)~(b1))/\
+                                (g(a)~c2)
+    |_,_ => True
+    end.
 Proof.
-  intros. simpl in H0. dependent induction H0.
-  -  assumption.
-  -  apply refl.
-     - 
+  intros. induction H0.
+  - induction x1, x2.
+    -- trivial.
+    -- inversion H0.
+    -- trivial.
+    -- inversion H0. assumption.
+  - induction x1, x2.
+    -- trivial.
+    -- induction x3.
+       --- destruct IHzigzag. destruct H2. exists x.
+           split.
+           ---- rewrite H2. apply sym. inversion H0. assumption.
+           ---- assumption.
+       --- inversion H0.
+    -- trivial.
+    -- induction x3.
+       --- inversion H0.
+       --- inversion H0. rewrite H4. assumption.
+  - induction H0.
+    -- induction x0,x1,x2.
+       --- trivial.
+       --- inversion H2.
+       --- trivial.
+       --- inversion H2.
+       --- trivial.
+       --- exists r. split.
+           ---- simpl in H1. dependent induction H1.
+                apply sym. assumption.
+           ---- rewrite H0 in H2. inversion H2. apply sym.
+                assumption.
+       --- trivial.
+       --- inversion H1.
+    -- induction x0,x1,x2,x3.
+       --- trivial.
+       --- trivial.
+       --- inversion H2.
+       --- inversion H2.
+       --- inversion H1.
+       --- inversion H1.
+       --- inversion H1.
+       --- inversion H2.
+       --- inversion H0.
+       --- trivial.
+       --- inversion H0.
+       --- rewrite H0 in H2. apply IHzigzag0.
+           ---- assumption.
+           ---- inversion H0. rewrite <- IHzigzag.
+                apply sym. assumption.
+       --- trivial.
+       --- trivial.
+       ---inversion H1.
+       --- inversion H1.
+    -- induction x0,x1,x2,x3.
+       --- trivial.
+       --- trivial.
+       --- inversion H2.
+       --- inversion H2.
+       --- trivial.
+       --- inversion H2.
+       --- inversion H1.
+       --- inversion H2.
+       --- inversion H0.
+       ---inversion H0.
+       --- inversion H0.
+       ---inversion H0.
+       --- trivial.
+       --- inversion H1.
+       --- inversion H1.
+       --- inversion H1.
+    -- induction x0,x1,x2,x3.
+       --- trivial.
+       --- trivial.
+       --- inversion H2.
+       --- inversion H2.
+       --- trivial.
+       --- inversion H2.
+       --- inversion H1.
+       --- inversion H2.
+       --- trivial.
+       --- trivial.
+       --- exists r. split.
+           ---- inversion H1.apply sym. assumption.
+           ---- rewrite <- IHzigzag. inversion H2. apply sym.
+                assumption.
+       --- inversion H3.
+       --- trivial.
+       --- trivial.
+       --- inversion H1.
+       --- inversion H1.
+  - induction H0.
+    -- induction x0,x1,x2.
+       --- trivial.
+       --- inversion H1.
+       --- trivial.
+       --- inversion H0.
+       --- trivial.
+       --- inversion H1.
+       --- inversion H2.
+       --- inversion H2.
+    -- induction x0,x1,x2,x3.
+       --- trivial.
+       --- trivial.
+       --- inversion H1.
+       --- inversion H1.
+       --- trivial.
+       --- trivial.
+       --- rewrite H0 in H2. apply IHzigzag0.
+           ---- assumption.
+           ---- destruct IHzigzag. destruct H4. exists x. split.
+                ----- inversion H0. rewrite <- H8. assumption.
+                ----- assumption.
+       --- inversion H0.
+       --- trivial.
+       --- trivial.
+       --- inversion H1.
+       --- inversion H1.
+       --- trivial.
+       --- trivial.
+       --- inversion H2.
+       --- inversion H2.
+    -- induction x0,x1,x2,x3.
+       --- trivial.
+       --- trivial.
+       --- inversion H1.
+       --- inversion H1.
+       --- inversion H3.
+       --- trivial.
+       --- inversion H3.
+       --- destruct IHzigzag. destruct H5. assert (sim:r~x).
+           ---- inversion H2. rewrite H9 in H5. apply H. rewrite H5.
+                apply refl.
+           ---- rewrite <- sim in H6. rewrite <- H6. inversion H1.
+                assumption.
+       --- trivial.
+       --- trivial.
+       --- inversion H3.
+       --- inversion H0.
+       --- trivial.
+       --- trivial.
+       --- inversion H2.
+       --- inversion H2.
+    -- rewrite H0 in H2. inversion H2.
+Qed.
