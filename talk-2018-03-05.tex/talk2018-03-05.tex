@@ -40,6 +40,64 @@
 \end{abstract}
 \tableofcontents
 
+\section{Postulated Coequalisers}
+\label{sec:postulated-coequalisers}
+
+We will use the traditional definition to define a coequaliser.
+
+\begin{definition}\label{def:coequaliser}
+  The \emph{coequaliser $q$ of a parallel pair $a,b:R \rightrightarrows X$} is an arrow
+    \begin{equation*}
+      \begin{tikzcd}
+       R \rar[yshift=0.5ex]{s} \rar[yshift=-0.5ex][swap]{t} & X \drar[swap]{\forall z} \rar[twoheadrightarrow]{q} & Q \dar[dashed]{\exists !\psi}\\
+        & {} & Z
+      \end{tikzcd}
+    \end{equation*}
+    such that
+    \begin{itemize}
+    \item the equality $sq=tq$ holds
+    \item for all $z:X \rightarrow Z$ such that $sz=tz$ there exists a unique $\psi:Q \rightarrow Z$.
+    \end{itemize}
+\end{definition}
+
+We will use the idea of a postulated colimit to give an explicit presentation of colimits in the category of sets.
+First we modify the definition of zigzag.
+
+\begin{definition}\label{def:zigzag}
+  An \emph{$s$-$t$-zigzag from $x\in X$ to $y\in X$} is a sequence $r_1,r_2,...,r_n\in R$ such that
+  \begin{equation*}
+    \begin{tikzcd}[column sep=0.5cm]
+      {} & r_1 \dlar[mapsto]{\phi_1} \drar[mapsto]{\phi_2} & {} & r_2 \dlar[mapsto]{\phi_3} \drar[mapsto]{\phi_4}& {} & r_3 \dlar[mapsto]{\phi_5}\drar[mapsto]{\phi_6} &{} &...& & r_n \dlar[mapsto]{\phi_7}\drar[mapsto]{\phi_8} &{} \\
+      x & {} & x_1 & {} & x_2 & {} & {} & ...& {}  & {} & y
+    \end{tikzcd}
+  \end{equation*}
+  where the $\phi_i\in\{s,t\}$.
+\end{definition}  
+
+\begin{definition}\label{def:postulated-coequaliser}
+  A cofork
+  \begin{equation*}
+    \begin{tikzcd}
+     R \rar[yshift=0.5ex]{s} \rar[yshift=-0.5ex][swap]{t} & X \rar{q} & Q
+    \end{tikzcd}
+  \end{equation*}
+  is \emph{a postulated coequaliser} iff
+  \begin{itemize}
+  \item the arrow $q$ is an epimorphism
+  \item for all $x,y\in X$ $(x)q=(y)q$ iff there exists an $s$-$t$-zigzag from $x$ to $y$.
+  \end{itemize}
+\end{definition}
+
+We can use postulated coequalisers to give a concrete presentation of coequalisers due to the following result of Kock.
+
+\begin{proposition}\label{prop:postulated-colimits-are-colimits}
+  In any Grothendieck toposes $\mathcal E$ every postulated coequaliser is a coequaliser.
+\end{proposition}
+
+\section{An Inductive Definition of Zigzag}
+\label{sec:inductive-definition-zigzag}
+
+
 
 
 \bibliography{references}

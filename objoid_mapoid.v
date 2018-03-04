@@ -3,22 +3,17 @@ Section objoid.
 Require Import Coq.Classes.SetoidClass.
 Require Import Coq.Setoids.Setoid.
 
-(*  an objoid is like a setoid but we don't have to carry around
-    the Type of the carrier *)
 Record objoid: Type :=
-      { carrier:>Type;
-        eq:carrier->carrier->Prop;
-        refl: reflexive _ eq;
-        sym: symmetric _ eq;
-        trans: transitive _ eq
-      }.
+  {carrier:>Type;
+   eq:carrier->carrier->Prop;
+   refl: reflexive _ eq;
+   sym: symmetric _ eq;
+   trans: transitive _ eq}.
 
 Arguments eq {o}.
 Infix "~" := eq (at level 95).
 Variables A B C:objoid.
 
-(*  a mapoid is a function between the carriers of two objoids
-    that preserves the equivalence *)
 Structure mapoid (A B:objoid) :=
   {map:> carrier A -> carrier B;
    pres (a1 a2:carrier A) (H:a1~a2): map a1~map a2}.
@@ -65,8 +60,6 @@ Arguments mapoid_ext {A}{B}.
 Arguments mapoid_app {A}{B}{f}{f2}.
 Arguments sym {o}{x}{y}.
 Arguments refl {o}{x}.
-
-
 Arguments apply {A} {B}.
 Arguments comp {A}{B}{C}.
 Infix "|>" := apply (at level 11, left associativity).
@@ -92,13 +85,6 @@ Proof.
 Lemma gen_equiv_trans: Transitive gen_equiv.
 Proof.
   unfold Transitive. intro. intro. intro. apply gen_trans. Qed.
-
-Program Instance gen_setoid_inner: Setoid A:=
-  {equiv:=gen_equiv;
-    setoid_equiv:=
-      {|Equivalence_Reflexive:=gen_equiv_refl;
-        Equivalence_Symmetric:=gen_equiv_sym;
-        Equivalence_Transitive:=gen_equiv_trans|}}.
 
 Definition gen_obj:objoid :=
   {|carrier:=A;
