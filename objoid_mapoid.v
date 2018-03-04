@@ -64,35 +64,3 @@ Arguments apply {A} {B}.
 Arguments comp {A}{B}{C}.
 Infix "|>" := apply (at level 11, left associativity).
 Infix "||>" := comp (at level 10, right associativity).
-
-Section generators.
-
-Variable A:Type.
-Variable rel:relation A.
-
-Inductive gen_equiv:relation A:=
-|from_rel (a1 a2:A):(rel a1 a2)->gen_equiv a1 a2
-|gen_refl (a1:A):gen_equiv a1 a1
-|gen_sym (a1 a2:A):gen_equiv a1 a2 -> gen_equiv a2 a1
-|gen_trans (a1 a2 a3:A):gen_equiv a1 a2->gen_equiv a2 a3->gen_equiv a1 a3.
-
-Lemma gen_equiv_refl: Reflexive gen_equiv.
-Proof.
-  unfold Reflexive. intros. apply gen_refl. Qed.
-Lemma gen_equiv_sym: Symmetric gen_equiv.
-Proof.
-  unfold Symmetric. intros. apply gen_sym. apply H. Qed.
-Lemma gen_equiv_trans: Transitive gen_equiv.
-Proof.
-  unfold Transitive. intro. intro. intro. apply gen_trans. Qed.
-
-Definition gen_obj:objoid :=
-  {|carrier:=A;
-    eq:=gen_equiv;
-    refl:=gen_refl;
-    sym:=gen_sym;
-    trans:=gen_trans|}.
-
-End generators.
-
-Arguments gen_obj{A}.
