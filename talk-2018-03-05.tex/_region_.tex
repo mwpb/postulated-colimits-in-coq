@@ -1,0 +1,55 @@
+\message{ !name(talk2018-03-05.tex)}\documentclass{article}
+\usepackage{calc}
+\setcounter{tocdepth}{2}
+\providecommand{\keywords}[1]{\textbf{\textit{Keywords---}} #1}
+\usepackage{tikz-cd}
+\usepackage{tensor}
+% \usepackage{hyperref}
+% \usepackage{csquotes}
+\usepackage{fancyvrb}
+\usepackage{todonotes}
+\usepackage{verbatim}
+\usepackage{amsmath}
+\usepackage{microtype}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{thmtools}
+\usepackage{nameref,hyperref}
+\usepackage{cleveref}
+
+\newcommand{\tens}[2]{{_{#1}}\times_{#2}}
+
+\declaretheorem[numberwithin=section]{theorem}
+\declaretheorem[sibling=theorem]{exercise}
+\declaretheorem[sibling=theorem]{example}
+\declaretheorem[sibling=theorem]{non-example}
+\declaretheorem[sibling=theorem]{lemma}
+\declaretheorem[sibling=theorem]{corollary}
+\declaretheorem[sibling=theorem]{proposition}
+\declaretheorem[style=definition,sibling=theorem]{definition}
+\declaretheorem[style=definition,sibling=theorem]{axiom}
+\declaretheorem[style=definition,sibling=theorem]{notation}
+\declaretheorem[sibling=theorem]{question}
+\declaretheorem[style=remark,sibling=theorem]{remark}
+\title{Using Postulated Colimits in Coq}
+\author{Work in Progress}
+\begin{document}
+
+\message{ !name(talk2018-03-05.tex) !offset(-3) }
+
+\maketitle
+\begin{abstract}
+  In this talk we will define and construct finite colimits in Coq in a context that is ostensibly similar to the category of sets.
+  First we will review without proof the key mathematical ideas involved in the theory of postulated colimits as described in a note of Anders Kock.
+  Then we will give an inductive definition of the fundamental notion of zigzag in this theory.
+\end{abstract}
+\tableofcontents
+
+
+
+\bibliography{references}
+\bibliographystyle{hplain}
+
+\message{ !name(talk2018-03-05.tex) !offset(-5) }
+
+\end{document}
