@@ -6,7 +6,6 @@ Require Import Coq.Classes.SetoidClass.
 Require Import Coq.Setoids.Setoid.
 Require Import Coq.Program.Equality.
 
-
 Section pushout.
 
   Variables A B C:objoid.

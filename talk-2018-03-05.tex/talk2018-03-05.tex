@@ -94,11 +94,145 @@ We can use postulated coequalisers to give a concrete presentation of coequalise
   In any Grothendieck toposes $\mathcal E$ every postulated coequaliser is a coequaliser.
 \end{proposition}
 
+\section{Objoids and Mapoids}
+\label{sec:objoids-mapoids}
+
+In our formulation we replace a sets with objoids.
+An objoid is a type equipped with an equivalence relation on the terms of the type.
+
+\begin{verbatim}
+Record objoid: Type :=
+  {carrier:>Type;
+   eq:carrier->carrier->Prop;
+   refl:reflexive carrier eq;
+   sym:symmetric carrier eq;
+   trans:transitive carrier eq}.
+Infix "~" := eq (at level 95).
+\end{verbatim}
+
+We replace functions with \emph{mapoids} which are the appropriate structure preserving maps for objoids.
+
+\begin{verbatim}
+Structure mapoid (A B:objoid) :=
+  {map:>carrier A -> carrier B;
+   pres (a1 a2:carrier A) (H:a1~a2):map a1~map a2}.
+\end{verbatim}
+
+Sometimes it is easier to use an infix for function application.
+
+\begin{verbatim}
+Definition application (a1:carrier A) (f1:mapoid A B) := map f1 a1.
+Infix "|>" := application (at level 11, left associativity).
+\end{verbatim}
+
+We use double pipe for composition.
+\begin{verbatim}
+Definition comp:=
+  {|map:=fun a:carrier A=>g(f(a));
+    pres:=comp_pres|}.
+Infix "||>" := comp (at level 10, right associativity).
+\end{verbatim}
+
+Finally we assert extensionality for functions.
+\begin{verbatim}
+Axiom mapoid_ext:
+  (forall a:carrier A, f(a)~f2(a)) -> f=f2.
+Axiom mapoid_app:
+  f=f2 -> (forall a:carrier A, f(a)~f2(a)).
+\end{verbatim}
+
 \section{An Inductive Definition of Zigzag}
 \label{sec:inductive-definition-zigzag}
 
+It turns out that we can give an inductive definition of zigzag.
+Note that in order formulate this in Coq we need to add a base case and a way to cons equivalent elements onto a zigzag.
+\begin{verbatim}
+Inductive zigzag(x1 x2:X):Prop:=
+  |xid (H:x1~x2):zigzag x1 x2
+  |xcons {x3:X}: (x1~x3)-> (zigzag x3 x2) -> zigzag x1 x2
+  |stcons{r:R}{x3:X} (H1:x1~(s(r))) (H2:x3~(t(r)))
+         (z1:zigzag x3 x2): zigzag x1 x2
+  |tscons{r:R}{x3:X} (H1:x1~(t(r))) (H2:x3~(s(r)))
+         (z1:zigzag x3 x2): zigzag x1 x2.
+\end{verbatim}
 
+\begin{lemma}
+  The zigzag relation is reflexive, symmetric and transitive.
+\end{lemma}
 
+This means that we can define the coequaliser as a postulated coequaliser.
+
+\begin{verbatim}
+Definition Q:objoid:=
+  {|carrier:=X;
+    eq:=zigzag;
+    refl:=zigzag_refl;
+    sym:=zigzag_sym;
+    trans:=zigzag_trans|}.
+Definition q:mapoid X Q:=
+  {|map:=fun x:X => x:Q;
+    pres:=id_pres|}.
+\end{verbatim}
+
+\begin{proposition}
+  The postulated coequaliser is a coequaliser.
+  \begin{proof}
+    The factorisation is given by the identity 
+    \begin{verbatim}
+Definition fact_arrow(Z:objoid) (z:mapoid X Z):Q->Z:=
+  fun x:Q => z(x).    
+Definition factorisation
+  (Z:objoid) (z:mapoid X Z) (H:s||>z = t||>z):mapoid Q Z:=
+  {|map:=fact_arrow Z z;
+    pres:=(fact_arrow_pres Z z H)|}.
+\end{verbatim}
+    and the main work is to prove that $\sim$ is preserved.
+    For this we refer to the proof in Coq.
+  \end{proof}
+\end{proposition}
+
+\section{Disjoint Unions}
+\label{sec:disjoint-unions}
+
+We have already defined and given a concrete presentation of coequalisers.
+In order to get all finite limits we only need to add finite coproducts.
+The natural translation of disjoint union into type theory is:
+\begin{verbatim}
+Inductive du:Type :=
+  |b:B -> du
+  |c:C -> du.
+Inductive du_eq:relation du:=
+  |beq(b1 b2:B) (H:b1~b2):du_eq (b b1) (b b2)
+  |ceq(c1 c2:C) (H:c1~c2):du_eq (c c1) (c c2).
+\end{verbatim}
+
+\begin{proposition}
+  The disjoint unions defined above satisfy the universal property of coproducts.
+\end{proposition}
+
+\section{Pushouts from Coequalisers and Coproducts}
+\label{sec:pushouts-from-coeq-and-coprod}
+
+In any category with finite colimits if the square
+\begin{equation*}
+  \begin{tikzcd}
+   A \rar{g} \dar{f} & B\dar{i_1}\\
+   C \rar{i_0} & Q
+  \end{tikzcd}
+\end{equation*}
+is a pushout then we can compute $Q$ using a disjoint union and a coequaliser
+\begin{equation*}
+  \begin{tikzcd}
+   {} & B \dar{u_0} & {}\\
+   A \urar{f} \drar{g} \rar[yshift=0.5ex]{s} \rar[yshift=-0.5ex][swap]{t} & B\amalg C \rar[twoheadrightarrow]{q} & Q\\
+   {} & C \uar{u_1} & {}
+  \end{tikzcd}
+\end{equation*}
+and where $u_0$ and $u_1$ are the coproduct inclusions $i0=u0 q$ and $i1= u1 q$.
+
+\begin{proposition}
+  The coequaliser of $fu_0$ and $gu_1$ is the pushout of $f$ and $g$.
+\end{proposition}
 
 \bibliography{references}
 \bibliographystyle{hplain}

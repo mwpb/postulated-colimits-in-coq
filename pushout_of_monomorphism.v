@@ -16,7 +16,7 @@ Variable H:
 
 Definition P := mk_pushout f g.
 
-Lemma f_mono(x1 x2:po_obj P):
+Lemma f_mono_inner(x1 x2:po_obj P):
     x1~x2 ->
     match x1,x2 with
     |(c c1),(c c2)=>c1~c2
@@ -168,3 +168,11 @@ Proof.
        --- inversion H2.
     -- rewrite H0 in H2. inversion H2.
 Qed.
+
+Lemma po_of_mono:
+  forall c1 c2:C,
+    c1|>i1 P~c2|>i1 P ->
+    c1~c2.
+Proof.
+  intros. apply f_mono_inner with (x1:=(c c1)) (x2:=(c c2)). assumption.
+  Qed.

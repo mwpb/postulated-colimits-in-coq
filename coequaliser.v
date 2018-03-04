@@ -33,14 +33,6 @@ Section Coequaliser.
          (z1:zigzag x3 x2): zigzag x1 x2
   |tscons{r:R}{x3:X} (H1:x1~(t(r))) (H2:x3~(s(r)))
          (z1:zigzag x3 x2): zigzag x1 x2.
-
-
-  Lemma zz_pres(x1 x2:X):
-    zigzag x1 x2 -> (forall y1:X, x1~y1->zigzag y1 x2).
-  Proof.
-    intros. apply sym in H0. apply xcons with x1.
-    - assumption.
-    - assumption. Qed.
         
   Arguments xid{x1}{x2}.
   Arguments xcons{x1}{x2}{x3}.
@@ -105,7 +97,6 @@ Section Coequaliser.
   Definition fact_arrow(Z:objoid) (z:mapoid X Z):Q->Z:=
     fun x:Q => z(x).
 
-  Check mapoid_ext.
   Lemma fact_arrow_pres(Z:objoid) (z:mapoid X Z) (H:s||>z = t||>z):
     forall q1 q2:Q,
       q1~q2->

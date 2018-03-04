@@ -6,22 +6,20 @@ Require Import Coq.Setoids.Setoid.
 Record objoid: Type :=
   {carrier:>Type;
    eq:carrier->carrier->Prop;
-   refl: reflexive _ eq;
-   sym: symmetric _ eq;
-   trans: transitive _ eq}.
+   refl: reflexive carrier eq;
+   sym: symmetric carrier eq;
+   trans: transitive carrier eq}.
 
 Arguments eq {o}.
 Infix "~" := eq (at level 95).
-Variables A B C:objoid.
 
 Structure mapoid (A B:objoid) :=
   {map:> carrier A -> carrier B;
    pres (a1 a2:carrier A) (H:a1~a2): map a1~map a2}.
 
+Variables A B C:objoid.
 Arguments map {A}{B}.
-
-Variable f:mapoid A B.
-Variable f2:mapoid A B.
+Variables f f2:mapoid A B.
 Variable g:mapoid B C.
 
 Lemma comp_pres:
@@ -31,7 +29,7 @@ Lemma comp_pres:
 Proof.
   intros. apply pres. apply pres. apply H. Qed.
 
-Definition apply (a1:carrier A) (f1:mapoid A B) := map f1 a1.
+Definition application (a1:carrier A) (f1:mapoid A B) := map f1 a1.
 Definition comp:=
   {|map:=fun a:carrier A=>g(f(a));
     pres:=comp_pres|}.
@@ -47,7 +45,6 @@ Add Parametric Relation (s : objoid) : (@carrier s) (@eq s)
        reflexivity proved by (refl s)
        symmetry proved by (sym s)
        transitivity proved by (trans s) as eq_rel.
-
 Arguments eq {o}.
 Infix "~" := eq (at level 95).
 Add Parametric Morphism (S1 S2:objoid) (M:mapoid S1 S2):
@@ -60,7 +57,7 @@ Arguments mapoid_ext {A}{B}.
 Arguments mapoid_app {A}{B}{f}{f2}.
 Arguments sym {o}{x}{y}.
 Arguments refl {o}{x}.
-Arguments apply {A} {B}.
+Arguments application {A} {B}.
 Arguments comp {A}{B}{C}.
-Infix "|>" := apply (at level 11, left associativity).
+Infix "|>" := application (at level 11, left associativity).
 Infix "||>" := comp (at level 10, right associativity).

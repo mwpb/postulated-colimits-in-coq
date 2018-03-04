@@ -30,8 +30,6 @@ Section disjoint_union.
   Inductive du_eq:relation du:=
   |beq(b1 b2:B) (H:b1~b2):du_eq (b b1) (b b2)
   |ceq(c1 c2:C) (H:c1~c2):du_eq (c c1) (c c2).
-  (* |du_trans(x1 x2 x3:du) (H1:du_eq x1 x2) (H2:du_eq x2 x3): *)
-  (*    du_eq x1 x3. *)
                                       
   Lemma du_refl:
     forall x:du,
