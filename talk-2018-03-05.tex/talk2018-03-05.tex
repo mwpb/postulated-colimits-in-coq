@@ -234,6 +234,36 @@ and where $u_0$ and $u_1$ are the coproduct inclusions $i0=u0 q$ and $i1= u1 q$.
   The coequaliser of $fu_0$ and $gu_1$ is the pushout of $f$ and $g$.
 \end{proposition}
 
+\section{Pushouts of Monomorphisms in a Topos are Monomorphisms}
+\label{sec:pushouts-of-monomorphisms-are-monomorphisms}
+
+In a general topos we can make the following argument.
+For simplicity we assume that we are working in the category of sets and functions.
+
+\begin{lemma}\label{lem:pushout-of-mono}
+  If $f$ is a monomorphism and
+  \begin{equation*}
+    \begin{tikzcd}
+     A \rar{g} \dar[rightarrowtail]{f} & C\dar{i_1}\\
+     B \rar{i_0} & Q
+    \end{tikzcd}
+  \end{equation*}
+  is a pushout in $Set$ then $i_1$ is a monomorphism.
+  \begin{proof}
+    We first note that $(f,g):A \rightarrowtail B\times C$ is a monomorphism because $f$ is a monomorphism.
+    Next
+    \begin{equation*}
+      \begin{tikzcd}
+       A \rar{g} \dar[rightarrowtail]{f} & C\dar{i_1} \arrow[bend left,rightarrowtail]{ddr}{c\mapsto \{c\}} & {}\\
+       B \rar{i_0} \arrow[bend right]{rrd}{\phi_{(f,g)}} & Q \drar[dashed]{\psi} & {}\\
+       {} & {} & \mathcal P C
+      \end{tikzcd}
+    \end{equation*}
+    where $\phi_{(f,g)}(b)=\{c\in C|~\exists a\in A.~f(a)=b \wedge g(a)=c\}$.
+    Therefore $i_1$ is a monomorphism because $c\mapsto \{c\}$ is a monomorphism.
+  \end{proof}
+\end{lemma}
+
 \bibliography{references}
 \bibliographystyle{hplain}
 
