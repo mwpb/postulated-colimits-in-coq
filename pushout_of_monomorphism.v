@@ -176,4 +176,3 @@ Lemma po_of_mono:
 Proof.
   intros. apply f_mono_inner with (x1:=(c c1)) (x2:=(c c2)).
   assumption. Qed.
-

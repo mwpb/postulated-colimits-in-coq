@@ -41,6 +41,11 @@
 \end{abstract}
 \tableofcontents
 
+\section{General References}
+\label{sec:general-references}
+
+We make general reference to a paper \cite{Kock89postulatedcolimits} of Anders Kock and a master's thesis of \cite{carvalho-coq}.
+
 \section{Postulated Coequalisers}
 \label{sec:postulated-coequalisers}
 
@@ -92,7 +97,7 @@ We refer to the preprint \cite{Kock89postulatedcolimits}.
 We can use postulated coequalisers to give a concrete presentation of coequalisers due to the following result of Kock.
 
 \begin{proposition}\label{prop:postulated-colimits-are-colimits}
-  In any Grothendieck toposes $\mathcal E$ every postulated coequaliser is a coequaliser.
+  In a sheaf topos every postulated coequaliser is a coequaliser.
 \end{proposition}
 
 \section{Objoids and Mapoids}
@@ -162,7 +167,7 @@ Inductive zigzag(x1 x2:X):Prop:=
   The zigzag relation is reflexive, symmetric and transitive.
 \end{lemma}
 
-This means that we can define the coequaliser as a postulated coequaliser.
+This means that we can construct a presentation of a coequaliser as a postulated coequaliser.
 
 \begin{verbatim}
 Definition Q:objoid:=
@@ -236,8 +241,8 @@ and where $u_0$ and $u_1$ are the coproduct inclusions $i0=u0 q$ and $i1= u1 q$.
   The coequaliser of $fu_0$ and $gu_1$ is the pushout of $f$ and $g$.
 \end{proposition}
 
-\section{Pushouts of Monomorphisms in a Topos are Monomorphisms}
-\label{sec:pushouts-of-monomorphisms-are-monomorphisms}
+\section{Pushouts of Monomorphisms in a Topos}
+\label{sec:pushouts-of-monomorphisms}
 
 In a general topos we can make the following argument.
 For simplicity we assume that we are working in the category of sets and functions.
@@ -296,9 +301,6 @@ We sketch the argument below.
     c1 \sim x_1 \sim x_3 \sim x_5 \sim ... \sim x_{n+1}\sim c2
   \end{equation*}
   as required.
+  WARNING: this proof hides a technical problem when doing the induction that Coq does not allow us to hide.
 \end{lemma}
-
-\bibliography{references}
-\bibliographystyle{hplain}
-
 \end{document}
