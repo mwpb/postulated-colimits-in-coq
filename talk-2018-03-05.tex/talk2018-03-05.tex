@@ -16,6 +16,7 @@
 \usepackage{thmtools}
 \usepackage{nameref,hyperref}
 \usepackage{cleveref}
+\usepackage[utf8]{inputenc}
 
 \newcommand{\tens}[2]{{_{#1}}\times_{#2}}
 
@@ -56,12 +57,12 @@ We will use the traditional definition to define a coequaliser.
     such that
     \begin{itemize}
     \item the equality $sq=tq$ holds
-    \item for all $z:X \rightarrow Z$ such that $sz=tz$ there exists a unique $\psi:Q \rightarrow Z$.
+    \item for all $z:X \rightarrow Z$ such that $sz=tz$ there exists a unique $\psi:Q \rightarrow Z$ such that $q\psi = z$.
     \end{itemize}
 \end{definition}
 
-We will use the idea of a postulated colimit to give an explicit presentation of colimits in the category of sets.
-First we modify the definition of zigzag.
+We will use the idea of a postulated coequaliser to give an explicit presentation of coequalisers in the category of sets.
+We refer to the preprint \cite{Kock89postulatedcolimits}.
 
 \begin{definition}\label{def:zigzag}
   An \emph{$s$-$t$-zigzag from $x\in X$ to $y\in X$} is a sequence $r_1,r_2,...,r_n\in R$ such that
@@ -99,6 +100,7 @@ We can use postulated coequalisers to give a concrete presentation of coequalise
 
 In our formulation we replace a sets with objoids.
 An objoid is a type equipped with an equivalence relation on the terms of the type.
+This is similiar to \cite{carvalho-coq}
 
 \begin{verbatim}
 Record objoid: Type :=
@@ -295,7 +297,6 @@ We sketch the argument below.
   \end{equation*}
   as required.
 \end{lemma}
-
 
 \bibliography{references}
 \bibliographystyle{hplain}
