@@ -1,49 +1,39 @@
-(* category from Lean project *)
+Require Import objoid_mapoid.
 
-(* namespace category
+Section category.
 
-open objoid
+  Record deductive_system :=
+    {obj:objoid;
+     arr:objoid;
+     s:mapoid arr obj;
+     t:mapoid arr obj;
+     e:mapoid obj arr;
+     section_s: forall x:obj, s(e(x))~x;
+     section_t: forall x:obj, t(e(x))~x;
+     comp: forall f g:arr, t(f)~s(g) -> arr;
+     comp_s: forall (f g:arr) (H:t(f)~s(g)), s(comp f g H)~s(f);
+     comp_t: forall (f g:arr) (H:t(f)~s(g)), t(comp f g H)~t(g)}.
+  (* What about simplicial approach? *)
 
-structure deductive_system :=
-    (obj:objoid)
-    (arr:objoid)
-    (s: mapoid arr obj)
-    (t: mapoid arr obj)
-    (e: mapoid obj arr)
-    (section_s: ∀ x:obj.carrier, x |> e |> s ∼ x)
-    (section_t: ∀ x:obj.carrier, x |> e |> t ∼ x)
-    (comp: ∀ f g:arr.carrier, f |> t ∼ g |> s → arr.carrier)
-    (comp_s: Π f g:arr.carrier, Π (H: f |> t ∼ g |> s), (comp f g H) |> s ∼ f |> s)
-    (comp_t: Π f g:arr.carrier, Π (H: f |> t ∼ g |> s), (comp f g H) |> t ∼ g |> t)
-
-lemma left_id_type (D:deductive_system) (f:D.arr.carrier): f |> D.s |> D.e |> D.t ∼ f |> D.s :=
-begin
-    apply D.section_t
-end
-
-lemma right_id_type (D:deductive_system) (f:D.arr.carrier): f |> D.t = f |> D.t |> D.e |> D.s := 
-begin
-    symmetry,
-    apply D.section_s
-end
-
-lemma assoc_type_1 (D:deductive_system) (f g h: D.arr) (H1:D.t(f)=D.s(g)) (H2:D.t(g)=D.s(h)): D.t(D.comp f g H1) = D.s(h) :=
-begin
-    rewrite D.comp_t,
-    apply H2
-end
-
-lemma assoc_type_2 (D:deductive_system) (f g h:D.arr) (H1:D.t(f)=D.s(g)) (H2:D.t(g)=D.s(h)): D.t(f) = D.s(D.comp g h H2)  :=
-begin
-    rewrite D.comp_s g h H2,
-    apply H1
-end
-
-structure category :=
-    (ded:deductive_system)
-    (left_id: Π (f:ded.arr), (ded.comp (ded.e(ded.s(f))) f (left_id_type ded f)) = f)
-    (right_id: Π (f:ded.arr), (ded.comp f (ded.e(ded.t(f))) (right_id_type ded f)) = f)
-    (assoc: Π (f g h:ded.arr), Π (H1:ded.t(f)=ded.s(g)), Π (H2:ded.t(g)=ded.s(h)),
-        ded.comp (ded.comp f g H1) h (assoc_type_1 ded f g h H1 H2) = ded.comp f (ded.comp g h H2) (assoc_type_2 ded f g h H1 H2))
-
-end category *)
+  Arguments s{d}.
+  Arguments t{d}.
+  Arguments e{d}.
+  Arguments section_s{d}.
+  Arguments section_t{d}.
+  Arguments comp{d}.
+  Arguments comp_s{d}{f}{g}.
+  Arguments comp_t{d}{f}{g}.
+  
+  Record category :=
+    {ded:deductive_system;
+     left_id:
+       forall (f:arr ded),
+         comp (e(s(f))) f (section_t (s(f)))~f;
+     right_id:
+       forall (f:arr ded),
+         comp f (e(t(f))) (sym (section_s (t(f))))~f;
+     assoc:
+       forall (f g h:arr ded) (H:t(f)~s(g)) (K:t g~s h),
+         comp f (comp g h K) (trans H (sym(comp_s K)))~
+              comp (comp f g H) h (trans (comp_t H) K)
+    }.

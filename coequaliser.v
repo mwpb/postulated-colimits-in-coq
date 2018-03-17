@@ -90,6 +90,7 @@ Section Coequaliser.
       (fun x:X=>x:Q)(x1) ~ (fun x=>x)(x2).
   Proof.
     intros. simpl. apply xid. assumption. Qed.
+
   Definition q:mapoid X Q:=
     {|map:=fun x:X => x:Q;
       pres:=id_pres|}.

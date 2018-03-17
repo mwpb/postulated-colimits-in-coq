@@ -57,6 +57,7 @@ Arguments mapoid_ext {A}{B}.
 Arguments mapoid_app {A}{B}{f}{f2}.
 Arguments sym {o}{x}{y}.
 Arguments refl {o}{x}.
+Arguments trans {o}{x}{y}{z}.
 Arguments application {A} {B}.
 Arguments comp {A}{B}{C}.
 Infix "|>" := application (at level 11, left associativity).
