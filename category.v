@@ -28,7 +28,7 @@ Section category.
   Arguments e{c}.
 
   Record functor (A B:category):=
-    {arr_map:mapoid A B;
+    {arr_map:>mapoid A B;
      obj_map:mapoid (obj A) (obj B);
      id_pres:e||>arr_map = obj_map ||> e;
      s_pres: arr_map||>s = s||>obj_map;
@@ -63,5 +63,14 @@ Section words.
 
   Definition words_obj_pushout:=
     mk_pushout (obj_map F) (obj_map G).
+
+  Definition Q0:objoid:= po_obj words_obj_pushout.
+
+  Inductive words_arr: Q0 -> Q0 -> Type:=
+  |id (x0:Q0): words_arr x0 x0
+  |b_arr (b1:B) (x0:Q0):
+     (words_arr x0 (i0 words_obj_pushout (s b1))) -> (words_arr x0 (i0 words_obj_pushout (t b1)))
+  |c_arr (c1:C) (x0:Q0):
+     (words_arr x0 (i1 words_obj_pushout (s c1))) -> (words_arr x0 (i1 words_obj_pushout (t c1))).
 
   
