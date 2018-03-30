@@ -12,7 +12,7 @@ Section pushout.
   Variable f:mapoid A B.
   Variable g:mapoid A C.
 
-  Structure Pushout:Type :=
+  Structure pushout:Type :=
     {po_obj:objoid;
      i0:mapoid B po_obj;
      i1:mapoid C po_obj;
