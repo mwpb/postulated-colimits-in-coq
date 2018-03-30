@@ -13,7 +13,7 @@ Section category.
      comp: forall f g:arr, t(f)~s(g) -> arr;
      comp_s: forall (f g:arr) (H:t(f)~s(g)), s(comp f g H)~s(f);
      comp_t: forall (f g:arr) (H:t(f)~s(g)), t(comp f g H)~t(g)}.
-  (* What about simplicial approach? *)
+  (* What about a simplicial approach? *)
 
   Arguments s{d}.
   Arguments t{d}.
