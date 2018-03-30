@@ -1,6 +1,6 @@
 # Project Title
 
-One Paragraph of project description goes here
+A library for working with pushouts of categories. Definitions and constructions for finite colimits in sheaf toposes. Definitions for categories using source, target and identity structural maps.
 
 ## Getting Started
 
