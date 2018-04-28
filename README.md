@@ -2,11 +2,7 @@
 
  A development of the theory of postulated colimits in Coq. Includes a proof that the pushout of a monomorphism is a monomorphism in a 'sheaf topos'.
 
-## Getting Started
-
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
-
-### Prerequisites
+## Prerequisites
 
 Install Coq [here](https://coq.inria.fr/).
 
@@ -20,6 +16,7 @@ If developing in emacs place the following lines:
 in your init file.
 If not then you may have to run coqc on the various dependcies to run the proofs.
 
-## Built With
+## Acknowledgements
 
 * [Coq](https://coq.inria.fr/) - Proof Assistant
+* Postulated colimits and left exactness of Kan-extensions, Anders Kock[here](http://home.math.au.dk/kock/postulated.pdf)
