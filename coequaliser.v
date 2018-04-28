@@ -12,19 +12,19 @@ Section Coequaliser.
     {coeq_obj:objoid;
      coeq_arr:mapoid X coeq_obj;
      cofork:
-       s||>coeq_arr = t||> coeq_arr;
+       s||>coeq_arr ~ t||> coeq_arr;
      coeq_induced:
        forall Z:objoid, forall z:mapoid X Z,
-           forall (H:s||>z = t||>z),
+           forall (H:s||>z ~ t||>z),
            mapoid coeq_obj Z;
      coeq_fact:
        forall Z:objoid, forall z:mapoid X Z,
-           forall (H:s||>z = t||>z),
-           coeq_arr ||> coeq_induced Z z H = z;
+           forall (H:s||>z ~ t||>z),
+           coeq_arr ||> coeq_induced Z z H ~ z;
      coeq_unique:
        forall Z:objoid, forall y z:mapoid coeq_obj Z,
-           coeq_arr ||> y = coeq_arr ||> z ->
-           y=z}.
+           coeq_arr ||> y ~ coeq_arr ||> z ->
+           y~z}.
 
   Inductive zigzag(x1 x2:X):Prop:=
   |xid (H:x1~x2):zigzag x1 x2
@@ -97,8 +97,8 @@ Section Coequaliser.
 
   Definition fact_arrow(Z:objoid) (z:mapoid X Z):Q->Z:=
     fun x:Q => z(x).
-
-  Lemma fact_arrow_pres(Z:objoid) (z:mapoid X Z) (H:s||>z = t||>z):
+  
+  Lemma fact_arrow_pres(Z:objoid) (z:mapoid X Z) (H:s||>z ~ t||>z):
     forall q1 q2:Q,
       q1~q2->
       fact_arrow Z z q1~fact_arrow Z z q2.
@@ -118,29 +118,28 @@ Section Coequaliser.
       apply pres with z x3 (s r) in H2. rewrite <- H in H1.
       rewrite H1. rewrite <- H2. assumption. Qed.
     
-  Definition factorisation (Z:objoid) (z:mapoid X Z) (H:s||>z = t||>z):mapoid Q Z:=
+  Definition factorisation (Z:objoid) (z:mapoid X Z) (H:s||>z ~ t||>z):mapoid Q Z:=
     {|map:=fact_arrow Z z;
       pres:=(fact_arrow_pres Z z H)|}.
   
   Lemma prf_coeq_fact:
-    forall (Z:objoid) (z:mapoid X Z) (H:s||>z = t||>z),
-      q ||> (factorisation Z z H) = z.
+    forall (Z:objoid) (z:mapoid X Z) (H:s||>z ~ t||>z),
+      q ||> (factorisation Z z H) ~ z.
   Proof.
-    intros. apply mapoid_ext. simpl. unfold fact_arrow. intro.
+    intros. simpl. unfold fact_arrow. intro.
     apply refl. Qed.
 
   Lemma prf_coeq_unique:
     forall Z:objoid, forall y z:mapoid Q Z,
-        q ||> y = q ||> z ->
-        y=z.
+        q ||> y ~ q ||> z ->
+        y~z.
   Proof.
-    intros. apply mapoid_ext. intro.
-    apply mapoid_app with a in H. simpl in H. assumption. Qed.
-Check stcons.
+    simpl. unfold mapd_eq. intros. simpl in H. apply H. Qed.
+
   Lemma coforks:
-    s||>q = t||> q.
+    s||>q ~ t||> q.
   Proof.
-    apply mapoid_ext. simpl. intro. apply stcons with a (t a).
+    simpl. intro. apply stcons with a (t a).
     - apply refl.
     - apply refl.
     - apply xid. apply refl. Qed.

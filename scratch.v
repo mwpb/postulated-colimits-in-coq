@@ -1,43 +1,38 @@
-Require Import Coq.Program.Equality.
+Require Export Setoid.
+Require Export Relation_Definitions.
 
-Require Import Coq.Classes.SetoidClass.
-Require Import Coq.Setoids.Setoid.
+Parameter set: Type -> Type.
+Parameter empty: forall A, set A.
 
-Section objArr.
+Parameter eq_set: forall A, set A -> set A -> Prop.
 
-Structure obj:Type:=
-  {carrier:Type;
-   rel:>relation carrier}.
+Parameter union: forall A, set A -> set A -> set A.
 
-Arguments rel{o}.
+Axiom eq_set_refl: forall A, reflexive _ (eq_set (A:=A)).
 
-Infix "~" := rel (at level 101, left associativity).
+Axiom eq_set_sym: forall A, symmetric _ (eq_set (A:=A)).
 
-Structure arr (A B:obj):=
-  {map:carrier A->carrier B;
-   pres (a1 a2:carrier A):(a1~a2)->(map(a1)~map(a2))}.
+Axiom eq_set_trans: forall A, transitive _ (eq_set (A:=A)).
 
-Arguments map{A}{B}.
+Axiom empty_neutral: forall A (S: set A), eq_set (union S (empty A)) S.
 
-End objArr.
+Axiom union_compat:
+       forall (A : Type),
+        forall x x' : set A, eq_set x x' ->
+        forall y y' : set A, eq_set y y' ->
+         eq_set (union x y) (union x' y').
 
-Arguments rel{o}.
-Infix "~" := rel (at level 101, left associativity).
+Add Parametric Relation A : (set A) (@eq_set A)
+       reflexivity proved by (eq_set_refl (A:=A))
+       symmetry proved by (eq_set_sym (A:=A))
+       transitivity proved by (eq_set_trans (A:=A))
+       as eq_set_rel.
 
-Variable A:Type.
-Variable relA:relation A.
+Add Parametric Morphism A : (@union A) with 
+      signature (@eq_set A) ==> (@eq_set A) ==> (@eq_set A) as union_mor.
 
-Inductive EqA (a1 a2:A):Prop:=
-|inc: relA a1 a2 -> EqA a1 a2
-|sym:EqA a2 a1 -> EqA a1 a2.
+Proof. exact (@union_compat A). Qed.
 
-Check EqA_ind.
-
-Definition o:=
-  {|carrier:=A;
-    rel:=EqA|}.
-
-Lemma tester: forall a1 a2:carrier o, (a2~a1) -> (a1~a2).
-Proof.
-  intros. simpl in H. dependent induction H.
-  - 
+Lemma tester:
+  forall (S: set nat),
+    eq_set (union (union S empty) S) (union S S).

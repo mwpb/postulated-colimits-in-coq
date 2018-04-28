@@ -17,16 +17,17 @@ Section disjoint_union.
          mapoid du_obj Z;
      du_fact:
        forall (Z:objoid) (h:mapoid B Z) (k:mapoid C Z),
-         ((u0||>(du_induced Z h k)) = h)
-           /\(u1||>(du_induced Z h k)=k);
+         ((u0||>(du_induced Z h k)) ~ h)
+           /\(u1||>(du_induced Z h k)~k);
      du_unique:
        forall (Z:objoid) (x y:mapoid du_obj Z),
-         (u0||>x=u0||>y)/\(u1||>x=u1||>y)->
-         x=y}.
+         (u0||>x~u0||>y)/\(u1||>x~u1||>y)->
+         x~y}.
   
   Inductive du:Type :=
   |b:B -> du
   |c:C -> du.
+
   Inductive du_eq:relation du:=
   |beq(b1 b2:B) (H:b1~b2):du_eq (b b1) (b b2)
   |ceq(c1 c2:C) (H:c1~c2):du_eq (c c1) (c c2).
@@ -65,6 +66,11 @@ Section disjoint_union.
       sym:=du_sym;
       trans:=du_trans|}.
 
+  Add Parametric Morphism:
+    (@b) with signature (@eq B ==> @eq du_objoid) as apply_b.
+  Proof.
+    intros. apply beq. assumption. Qed.
+
   Lemma b_pres:
     forall b1 b2:B,
       b1~b2 ->
@@ -75,7 +81,12 @@ Section disjoint_union.
   Definition mapoid_b: mapoid B du_objoid :=
     {|map:= fun (b1:B)=>b(b1):(carrier du_objoid);
       pres:= b_pres|}.
-  
+
+  Add Parametric Morphism:
+    (@c) with signature (@eq C ==> @eq du_objoid) as apply_c.
+  Proof.
+    intros. apply ceq. assumption. Qed.
+
   Lemma c_pres:
     forall c1 c2:C,
       c1~c2->
@@ -107,19 +118,19 @@ Section disjoint_union.
 
   Lemma prf_du_fact:
     forall (Z:objoid) (h:mapoid B Z) (k:mapoid C Z),
-      ((mapoid_b||>(du_factorisation Z h k)) = h)
-      /\(mapoid_c||>(du_factorisation Z h k)=k).
+      ((mapoid_b||>(du_factorisation Z h k)) ~ h)
+      /\(mapoid_c||>(du_factorisation Z h k)~k).
   Proof.
     intros. split.
-    - apply mapoid_ext. intros. simpl. apply refl.
-    - apply mapoid_ext. intros. simpl. apply refl. Qed.
+    - intros. simpl. unfold mapd_eq. simpl. intro. apply refl.
+    - intros. simpl. unfold mapd_eq. intro. apply refl. Qed.
   
   Lemma prf_du_unique:
     forall (Z:objoid) (x y:mapoid du_objoid Z),
-      (mapoid_b||>x=mapoid_b||>y)/\(mapoid_c||>x=mapoid_c||>y)->
-      x=y.
+      (mapoid_b||>x~mapoid_b||>y)/\(mapoid_c||>x~mapoid_c||>y)->
+      x~y.
   Proof.
-    intros. apply mapoid_ext. intros. destruct H as (H0&H1).
+    intros. simpl. unfold mapd_eq. intros. destruct H as (H0&H1).
     induction a.
     - apply mapoid_app with c0 in H0. simpl in H0. assumption.
     - apply mapoid_app with c0 in H1. simpl in H1. assumption.
