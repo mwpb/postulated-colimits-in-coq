@@ -19,4 +19,4 @@ If not then you may have to run coqc on the various dependencies to run the proo
 ## Acknowledgements
 
 * [Coq](https://coq.inria.fr/) - Proof Assistant
-* Postulated colimits and left exactness of Kan-extensions, Anders Kock[here](http://home.math.au.dk/kock/postulated.pdf)
+* Postulated colimits and left exactness of Kan-extensions, Anders Kock, available [here](http://home.math.au.dk/kock/postulated.pdf)
