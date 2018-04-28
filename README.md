@@ -14,7 +14,7 @@ If developing in emacs place the following lines:
 ```
 
 in your init file.
-If not then you may have to run coqc on the various dependcies to run the proofs.
+If not then you may have to run coqc on the various dependencies to run the proofs.
 
 ## Acknowledgements
 
